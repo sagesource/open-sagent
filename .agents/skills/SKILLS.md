@@ -1,0 +1,29 @@
+# SKILLS列表
+
+## 公共类SKILLS
+
+| SKILL名称 | SKILL路径 | SKILL描述 |
+|---------|---------|---------|
+| skill-list | commons/skill_list.md | 生成SKILL列表 |
+| reference-skill-generator | commons/reference_skill_generator.md | 引用类SKILL生成规范 |
+| maven-root-pom | commons/maven_root_pom.md | MAVEN根POM.XML文件生成规范 |
+| technology-stack | commons/technology_stack.md | 技术栈列表、编码规范 |
+
+## 架构方案类SKILLS
+
+| SKILL名称 | SKILL路径 | SKILL描述 |
+|---------|---------|---------|
+| (暂无) | - | - |
+
+## 引用类SKILLS
+
+| SKILL名称 | SKILL路径 | SKILL描述 |
+|---------|---------|---------|
+| (暂无) | - | - |
+
+---
+
+> **说明**：
+> - 公共类SKILLS：涉及编码规范、技术规范、变更约束、SKILL生成规范等
+> - 架构方案类SKILLS：系统架构和业务架构方案类SKILL
+> - 引用类SKILLS：编码示例，状态机描述等
