@@ -1,5 +1,7 @@
 # Open Sagent AI-Framework
 
+> 全程使用中文输出
+
 ## SKILLS说明
 
 ### SKILLS分类
