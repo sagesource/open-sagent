@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>ai.sagesource</groupId>
+        <artifactId>open-sagent</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>open-sagent-example</artifactId>
+    <name>Open Sagent Example</name>
+    <description>示例代码模块</description>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <!-- Web Module -->
+        <dependency>
+            <groupId>ai.sagesource</groupId>
+            <artifactId>open-sagent-web</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <!-- CLI Module -->
+        <dependency>
+            <groupId>ai.sagesource</groupId>
+            <artifactId>open-sagent-cli</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

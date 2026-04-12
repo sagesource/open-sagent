@@ -123,4 +123,14 @@
         </plugins>
     </build>
 
+    <modules>
+        <module>open-sagent-base</module>
+        <module>open-sagent-core</module>
+        <module>open-sagent-infrastructure</module>
+        <module>open-sagent-tools</module>
+        <module>open-sagent-web</module>
+        <module>open-sagent-cli</module>
+        <module>open-sagent-example</module>
+    </modules>
+
 </project>

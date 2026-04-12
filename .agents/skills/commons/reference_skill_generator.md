@@ -8,7 +8,7 @@ description: 引用类SKILL生成规范
 创建SKILL时，需要遵循以下步骤：
 
 1. 在工程 [.agent/skills/references] 路径生成SKILL文件，文件名使用 技能名英文蛇形命名.md
-2. 技能名称，使用
+2. 技能名称，使用英文描述 xxx-xxx-xxx.md模式，需要保持全局唯一
 
 SKILL文件内容
 

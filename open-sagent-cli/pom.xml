@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>ai.sagesource</groupId>
+        <artifactId>open-sagent</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>open-sagent-cli</artifactId>
+    <name>Open Sagent CLI</name>
+    <description>CLI-AGENT实现模块</description>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <!-- Core Module -->
+        <dependency>
+            <groupId>ai.sagesource</groupId>
+            <artifactId>open-sagent-core</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <!-- Tools Module -->
+        <dependency>
+            <groupId>ai.sagesource</groupId>
+            <artifactId>open-sagent-tools</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <!-- Infrastructure Module -->
+        <dependency>
+            <groupId>ai.sagesource</groupId>
+            <artifactId>open-sagent-infrastructure</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <!-- Dotenv Java -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- SLF4J -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- Logback (for CLI logging) -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

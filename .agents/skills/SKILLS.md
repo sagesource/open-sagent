@@ -7,13 +7,14 @@
 | skill-list | commons/skill_list.md | 生成SKILL列表 |
 | reference-skill-generator | commons/reference_skill_generator.md | 引用类SKILL生成规范 |
 | maven-root-pom | commons/maven_root_pom.md | MAVEN根POM.XML文件生成规范 |
-| technology-stack | commons/technology_stack.md | 技术栈列表、编码规范 |
+| technology-stack | commons/technology_stack.md | 技术栈列表、编码规范、模块依赖规范 |
+| modify-rules | commons/modify_rules.md | 变更约束规范，包括代码变更和方案变更，以及变更通过、未通过、需要修改时的规定 |
 
 ## 架构方案类SKILLS
 
 | SKILL名称 | SKILL路径 | SKILL描述 |
 |---------|---------|---------|
-| (暂无) | - | - |
+| project-system-infrastructure | infrastructure/project_system_infrastructure.md | 项目系统架构说明：包括工程模块架构 |
 
 ## 引用类SKILLS
 

@@ -1,6 +1,6 @@
 ---
 name: technology-stack
-description: 技术栈列表、编码规范
+description: 技术栈列表、编码规范、模块依赖规范
 ---
 
 ## 技术栈
@@ -55,6 +55,13 @@ public interface Test {
 - 使用 `@Builder` 用于构建器模式，对于被`@Builder`标记的类在创建对象时，也要使用`.builder().build()`方法构建对象和参数值
 - 使用 `@Getter/@Setter` 精细控制
 - 使用 `@Slf4j` 用于日志
+
+## 模块依赖规范
+
+- 所有Maven子模块需要在根pom文件中定义
+- 子模块依赖其他子模块直接从根pom中继承
+- 模块间不允许互相依赖
+- 如果依赖的模块已经包含的依赖，不需要再次引用
 
 ## Build Commands
 
