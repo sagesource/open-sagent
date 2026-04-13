@@ -9,18 +9,27 @@
 | maven-root-pom | commons/maven_root_pom.md | MAVEN根POM.XML文件生成规范 |
 | technology-stack | commons/technology_stack.md | 技术栈列表、编码规范、模块依赖规范 |
 | modify-rules | commons/modify_rules.md | 变更约束规范，包括代码变更和方案变更，以及变更通过、未通过、需要修改时的规定 |
+| project-init | commons/project_init.md | 工程初始化生成规范 |
 
 ## 架构方案类SKILLS
 
 | SKILL名称 | SKILL路径 | SKILL描述 |
 |---------|---------|---------|
 | project-system-infrastructure | infrastructure/project_system_infrastructure.md | 项目系统架构说明：包括工程模块架构 |
+| project-design-llm | infrastructure/project_design_llm.md | 项目系统设计方案，LLM相关 |
+
+## 方案类PLANS
+
+| 方案编号 | 方案路径 | 方案描述 |
+|---------|---------|---------|
+| 001 | plan/001-LLM模块-Client设计方案.md | LLM客户端模块设计方案 |
+| 002 | plan/002-LLM模块-Message设计方案.md | LLM消息模块设计方案 |
 
 ## 引用类SKILLS
 
 | SKILL名称 | SKILL路径 | SKILL描述 |
 |---------|---------|---------|
-| (暂无) | - | - |
+| project-exception-system | references/project_exception_system.md | 项目异常体系说明 |
 
 ---
 

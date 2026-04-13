@@ -26,3 +26,4 @@ replay_pid*
 .idea
 .flattened-pom.xml
 target
+.env
