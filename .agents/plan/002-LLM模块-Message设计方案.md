@@ -26,11 +26,11 @@ Open Sagent框架需要与各大厂商的LLM进行对话交互。为了屏蔽不
 | `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/ImageContent.java` | 新增 | 图片内容实现 |
 | `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/FileContent.java` | 新增 | 文件内容实现 |
 | `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/ContentType.java` | 新增 | 内容类型枚举 |
-| `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/UserMessage.java` | 新增 | 用户消息实现 |
-| `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/SystemMessage.java` | 新增 | 系统消息实现 |
-| `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/AssistantMessage.java` | 新增 | 助手消息实现 |
-| `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/DeveloperMessage.java` | 新增 | 开发者消息实现 |
-| `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/ToolMessage.java` | 新增 | 工具消息实现 |
+| `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/UserCompletionMessage.java` | 新增 | 用户消息实现 |
+| `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/SystemCompletionMessage.java` | 新增 | 系统消息实现 |
+| `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/AssistantCompletionMessage.java` | 新增 | 助手消息实现 |
+| `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/DeveloperCompletionMessage.java` | 新增 | 开发者消息实现 |
+| `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/ToolCompletionMessage.java` | 新增 | 工具消息实现 |
 | `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/MessageUtils.java` | 新增 | 消息工具类 |
 | `open-sagent-core/src/test/java/ai/sagesource/opensagent/core/llm/message/CompletionMessageTest.java` | 新增 | 消息模型单元测试 |
 
@@ -418,7 +418,7 @@ public interface CompletionMessage {
 }
 ```
 
-#### 文件 8: `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/UserMessage.java`
+#### 文件 8: `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/UserCompletionMessage.java`
 
 ```java
 package ai.sagesource.opensagent.core.llm.message;
@@ -439,7 +439,7 @@ import java.util.List;
  */
 @Data
 @Builder
-public class UserMessage implements CompletionMessage {
+public class UserCompletionMessage implements CompletionMessage {
 
     /**
      * 消息ID
@@ -479,17 +479,17 @@ public class UserMessage implements CompletionMessage {
      * 创建纯文本用户消息（便捷方法）
      *
      * @param text 文本内容
-     * @return UserMessage实例
+     * @return UserCompletionMessage实例
      */
-    public static UserMessage of(String text) {
-        return UserMessage.builder()
+    public static UserCompletionMessage of(String text) {
+        return UserCompletionMessage.builder()
                 .contents(new ArrayList<>(List.of(TextContent.builder().text(text).build())))
                 .build();
     }
 }
 ```
 
-#### 文件 9: `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/SystemMessage.java`
+#### 文件 9: `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/SystemCompletionMessage.java`
 
 ```java
 package ai.sagesource.opensagent.core.llm.message;
@@ -510,7 +510,7 @@ import java.util.List;
  */
 @Data
 @Builder
-public class SystemMessage implements CompletionMessage {
+public class SystemCompletionMessage implements CompletionMessage {
 
     /**
      * 消息ID
@@ -550,17 +550,17 @@ public class SystemMessage implements CompletionMessage {
      * 创建纯文本系统消息（便捷方法）
      *
      * @param text 系统提示文本
-     * @return SystemMessage实例
+     * @return SystemCompletionMessage实例
      */
-    public static SystemMessage of(String text) {
-        return SystemMessage.builder()
+    public static SystemCompletionMessage of(String text) {
+        return SystemCompletionMessage.builder()
                 .contents(new ArrayList<>(List.of(TextContent.builder().text(text).build())))
                 .build();
     }
 }
 ```
 
-#### 文件 10: `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/AssistantMessage.java`
+#### 文件 10: `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/AssistantCompletionMessage.java`
 
 ```java
 package ai.sagesource.opensagent.core.llm.message;
@@ -581,7 +581,7 @@ import java.util.List;
  */
 @Data
 @Builder
-public class AssistantMessage implements CompletionMessage {
+public class AssistantCompletionMessage implements CompletionMessage {
 
     /**
      * 消息ID
@@ -632,17 +632,17 @@ public class AssistantMessage implements CompletionMessage {
      * 创建纯文本助手消息（便捷方法）
      *
      * @param text 回复文本
-     * @return AssistantMessage实例
+     * @return AssistantCompletionMessage实例
      */
-    public static AssistantMessage of(String text) {
-        return AssistantMessage.builder()
+    public static AssistantCompletionMessage of(String text) {
+        return AssistantCompletionMessage.builder()
                 .contents(new ArrayList<>(List.of(TextContent.builder().text(text).build())))
                 .build();
     }
 }
 ```
 
-#### 文件 11: `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/DeveloperMessage.java`
+#### 文件 11: `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/DeveloperCompletionMessage.java`
 
 ```java
 package ai.sagesource.opensagent.core.llm.message;
@@ -663,7 +663,7 @@ import java.util.List;
  */
 @Data
 @Builder
-public class DeveloperMessage implements CompletionMessage {
+public class DeveloperCompletionMessage implements CompletionMessage {
 
     /**
      * 消息ID
@@ -703,17 +703,17 @@ public class DeveloperMessage implements CompletionMessage {
      * 创建纯文本开发者消息（便捷方法）
      *
      * @param text 开发者指令文本
-     * @return DeveloperMessage实例
+     * @return DeveloperCompletionMessage实例
      */
-    public static DeveloperMessage of(String text) {
-        return DeveloperMessage.builder()
+    public static DeveloperCompletionMessage of(String text) {
+        return DeveloperCompletionMessage.builder()
                 .contents(new ArrayList<>(List.of(TextContent.builder().text(text).build())))
                 .build();
     }
 }
 ```
 
-#### 文件 12: `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/ToolMessage.java`
+#### 文件 12: `open-sagent-core/src/main/java/ai/sagesource/opensagent/core/llm/message/ToolCompletionMessage.java`
 
 ```java
 package ai.sagesource.opensagent.core.llm.message;
@@ -734,7 +734,7 @@ import java.util.List;
  */
 @Data
 @Builder
-public class ToolMessage implements CompletionMessage {
+public class ToolCompletionMessage implements CompletionMessage {
 
     /**
      * 消息ID
@@ -786,10 +786,10 @@ public class ToolMessage implements CompletionMessage {
      * @param toolCallId 工具调用ID
      * @param toolName   工具名称
      * @param result     工具执行结果文本
-     * @return ToolMessage实例
+     * @return ToolCompletionMessage实例
      */
-    public static ToolMessage of(String toolCallId, String toolName, String result) {
-        return ToolMessage.builder()
+    public static ToolCompletionMessage of(String toolCallId, String toolName, String result) {
+        return ToolCompletionMessage.builder()
                 .toolCallId(toolCallId)
                 .toolName(toolName)
                 .contents(new ArrayList<>(List.of(TextContent.builder().text(result).build())))
@@ -824,40 +824,40 @@ public final class MessageUtils {
      * 创建用户文本消息
      *
      * @param text 文本内容
-     * @return UserMessage
+     * @return UserCompletionMessage
      */
     public static CompletionMessage user(String text) {
-        return UserMessage.of(text);
+        return UserCompletionMessage.of(text);
     }
 
     /**
      * 创建系统文本消息
      *
      * @param text 文本内容
-     * @return SystemMessage
+     * @return SystemCompletionMessage
      */
     public static CompletionMessage system(String text) {
-        return SystemMessage.of(text);
+        return SystemCompletionMessage.of(text);
     }
 
     /**
      * 创建助手文本消息
      *
      * @param text 文本内容
-     * @return AssistantMessage
+     * @return AssistantCompletionMessage
      */
     public static CompletionMessage assistant(String text) {
-        return AssistantMessage.of(text);
+        return AssistantCompletionMessage.of(text);
     }
 
     /**
      * 创建开发者文本消息
      *
      * @param text 文本内容
-     * @return DeveloperMessage
+     * @return DeveloperCompletionMessage
      */
     public static CompletionMessage developer(String text) {
-        return DeveloperMessage.of(text);
+        return DeveloperCompletionMessage.of(text);
     }
 
     /**
@@ -866,10 +866,10 @@ public final class MessageUtils {
      * @param toolCallId 工具调用ID
      * @param toolName   工具名称
      * @param result     工具执行结果
-     * @return ToolMessage
+     * @return ToolCompletionMessage
      */
     public static CompletionMessage tool(String toolCallId, String toolName, String result) {
-        return ToolMessage.of(toolCallId, toolName, result);
+        return ToolCompletionMessage.of(toolCallId, toolName, result);
     }
 
     /**
@@ -877,13 +877,13 @@ public final class MessageUtils {
      *
      * @param text     文本内容
      * @param imageUrl 图片URL
-     * @return UserMessage
+     * @return UserCompletionMessage
      */
-    public static UserMessage userWithImage(String text, String imageUrl) {
+    public static UserCompletionMessage userWithImage(String text, String imageUrl) {
         List<MessageContent> contents = new ArrayList<>();
         contents.add(TextContent.builder().text(text).build());
         contents.add(ImageContent.builder().url(imageUrl).build());
-        return UserMessage.builder().contents(contents).build();
+        return UserCompletionMessage.builder().contents(contents).build();
     }
 
     /**
@@ -892,16 +892,16 @@ public final class MessageUtils {
      * @param text       文本内容
      * @param base64Data BASE64编码的图片数据
      * @param mimeType   图片MIME类型
-     * @return UserMessage
+     * @return UserCompletionMessage
      */
-    public static UserMessage userWithImageBase64(String text, String base64Data, String mimeType) {
+    public static UserCompletionMessage userWithImageBase64(String text, String base64Data, String mimeType) {
         List<MessageContent> contents = new ArrayList<>();
         contents.add(TextContent.builder().text(text).build());
         contents.add(ImageContent.builder()
                 .base64Data(base64Data)
                 .mimeType(mimeType)
                 .build());
-        return UserMessage.builder().contents(contents).build();
+        return UserCompletionMessage.builder().contents(contents).build();
     }
 
     /**
@@ -935,7 +935,7 @@ open-sagent-core (抽象定义)
     ├── MessageRole (角色枚举)
     ├── MessageContent (内容接口)
     ├── TextContent / ImageContent / FileContent (内容实现)
-    └── UserMessage / SystemMessage / AssistantMessage / DeveloperMessage / ToolMessage (消息实现)
+    └── UserCompletionMessage / SystemCompletionMessage / AssistantCompletionMessage / DeveloperCompletionMessage / ToolCompletionMessage (消息实现)
 
 open-sagent-infrastructure (依赖)
     └── 将实现CompletionMessage到OpenAI SDK消息的转换
@@ -956,7 +956,7 @@ open-sagent-infrastructure (依赖)
 1. **新增内容类型**：通过实现`MessageContent`接口可支持新的媒体类型（如音频、视频）
 2. **新增消息角色**：通过实现`CompletionMessage`接口可支持新的角色类型
 3. **厂商适配**：Infrastructure层将实现`CompletionMessage`到各厂商SDK消息的转换器
-4. **工具调用**：ToolMessage为未来Function Calling功能预留
+4. **工具调用**：ToolCompletionMessage为未来Function Calling功能预留
 
 ## 4. 测试计划
 
@@ -992,8 +992,8 @@ class CompletionMessageTest {
 
     @Test
     @DisplayName("创建用户文本消息 - 成功")
-    void testCreateUserMessage() {
-        UserMessage message = UserMessage.of("你好");
+    void testCreateUserCompletionMessage() {
+        UserCompletionMessage message = UserCompletionMessage.of("你好");
 
         assertNotNull(message);
         assertEquals(MessageRole.USER, message.getRole());
@@ -1002,8 +1002,8 @@ class CompletionMessageTest {
 
     @Test
     @DisplayName("创建系统消息 - 成功")
-    void testCreateSystemMessage() {
-        SystemMessage message = SystemMessage.of("你是一个助手");
+    void testCreateSystemCompletionMessage() {
+        SystemCompletionMessage message = SystemCompletionMessage.of("你是一个助手");
 
         assertNotNull(message);
         assertEquals(MessageRole.SYSTEM, message.getRole());
@@ -1012,8 +1012,8 @@ class CompletionMessageTest {
 
     @Test
     @DisplayName("创建助手消息 - 成功")
-    void testCreateAssistantMessage() {
-        AssistantMessage message = AssistantMessage.of("很高兴为你服务");
+    void testCreateAssistantCompletionMessage() {
+        AssistantCompletionMessage message = AssistantCompletionMessage.of("很高兴为你服务");
 
         assertNotNull(message);
         assertEquals(MessageRole.ASSISTANT, message.getRole());
@@ -1022,8 +1022,8 @@ class CompletionMessageTest {
 
     @Test
     @DisplayName("创建多模态用户消息 - 成功")
-    void testCreateMultimodalUserMessage() {
-        UserMessage message = UserMessage.builder()
+    void testCreateMultimodalUserCompletionMessage() {
+        UserCompletionMessage message = UserCompletionMessage.builder()
                 .contents(List.of(
                         TextContent.builder().text("这是什么图片？").build(),
                         ImageContent.builder().url("https://example.com/image.png").build()
@@ -1051,7 +1051,7 @@ class CompletionMessageTest {
     @Test
     @DisplayName("添加内容到消息 - 成功")
     void testAddContent() {
-        UserMessage message = UserMessage.of("初始内容");
+        UserCompletionMessage message = UserCompletionMessage.of("初始内容");
         message.addText("追加内容");
 
         assertEquals(2, message.getContents().size());
@@ -1083,8 +1083,8 @@ class CompletionMessageTest {
 
     @Test
     @DisplayName("工具消息创建 - 成功")
-    void testToolMessage() {
-        ToolMessage message = ToolMessage.of("call_123", "calculator", "42");
+    void testToolCompletionMessage() {
+        ToolCompletionMessage message = ToolCompletionMessage.of("call_123", "calculator", "42");
 
         assertNotNull(message);
         assertEquals(MessageRole.TOOL, message.getRole());
@@ -1099,4 +1099,4 @@ class CompletionMessageTest {
 
 | 评审人 | 时间 | 结论 | 备注 |
 |--------|------|------|------|
-| | | | |
+| Code Review | 2026/4/13 | 通过 | 子类命名统一为 xxxCompletionMessage 格式 |

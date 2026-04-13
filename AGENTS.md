@@ -1,6 +1,7 @@
 # Open Sagent AI-Framework
 
 > 全程使用中文输出
+> 无论是否为plan模式，必须遵守如下约定
 
 ## SKILLS说明
 

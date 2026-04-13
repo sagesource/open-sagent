@@ -49,6 +49,7 @@ public interface Test {
 - 方法名: camelCase (如 `thinking_streaming`)
 - 常量: UPPER_SNAKE_CASE
 - 包名: 全小写
+- 子类需要携带父类信息：例如CompletionMessage的子类，需要按照xxxCompletionMessage命名
 
 ### Lombok使用
 - 使用 `@Data` 用于POJO

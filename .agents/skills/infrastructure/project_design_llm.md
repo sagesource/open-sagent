@@ -17,6 +17,7 @@ description: 项目系统设计方案，LLM相关
 | Message    | LLM对话消息抽象，包括 System、Assist、User、Tool等LLM消息角色 |
 | Memory     | 记忆抽象                                         |
 | Agent      | AGENT模型，提供SimpleAgent和ReActAgent两种模式         |
+| Tool       | LLM TOOL-CALLING工具抽象（工具定义、工具执行）              |
 
 ### 模块流程描述
 
@@ -38,4 +39,22 @@ Message类型：SYSTEM ASSISTANT DEVELOPER TOOL USER
 
 Message应该支持 文本 + 多文件，文件需要支持BASE64 或 URI 引用
 
-#### 
+#### Tool模块
+
+该模块主要是针对LLM Tool-Calling 的工具定义进行封装，无论各种厂商对工具定义如何，都要通过该模块的Tool定义生成
+
+基于注解的方式，定义工具名称、工具参数名称、参数数据类型、是否必填
+
+工具的执行逻辑不在core工程中执行，这里只进行提供工具定义相关的功能
+
+同时，需要支持将大模型返回的Tool调用信息进行封装(方法名称、参数信息等)
+
+#### Completion模块
+
+该模块要完成与大模型的交互(即对话补全)的封装，在[open-sagent-infrastructure]工程中依赖不同厂商的Client完成大模型调用
+
+需要支持同步调用、异步调用、同步流式调用、异步流式调用，同时支持大模型的tool-calling功能
+
+要特别处理在流式调用的场景下，获取&解析大模型返回工具调用信息的处理
+
+在流式和异步调用的场景下，需要支持中断功能
