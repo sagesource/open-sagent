@@ -1,6 +1,6 @@
 package ai.sagesource.opensagent.infrastructure.agent.prompt;
 
-import ai.sagesource.opensagent.core.agent.prompt.OpenSagentPromptException;
+import ai.sagesource.opensagent.core.agent.exception.OpenSagentPromptException;
 import ai.sagesource.opensagent.core.agent.prompt.PromptTemplate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

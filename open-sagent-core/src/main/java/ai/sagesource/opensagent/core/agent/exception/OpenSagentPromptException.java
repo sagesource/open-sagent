@@ -1,4 +1,4 @@
-package ai.sagesource.opensagent.core.agent.prompt;
+package ai.sagesource.opensagent.core.agent.exception;
 
 import ai.sagesource.opensagent.base.exception.OpenSagentException;
 

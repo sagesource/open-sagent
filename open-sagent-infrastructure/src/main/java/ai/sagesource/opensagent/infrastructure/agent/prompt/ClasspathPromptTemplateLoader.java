@@ -1,6 +1,6 @@
 package ai.sagesource.opensagent.infrastructure.agent.prompt;
 
-import ai.sagesource.opensagent.core.agent.prompt.OpenSagentPromptException;
+import ai.sagesource.opensagent.core.agent.exception.OpenSagentPromptException;
 import ai.sagesource.opensagent.core.agent.prompt.PromptTemplate;
 import ai.sagesource.opensagent.core.agent.prompt.PromptTemplateLoader;
 import lombok.extern.slf4j.Slf4j;

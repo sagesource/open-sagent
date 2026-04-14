@@ -1,5 +1,7 @@
 package ai.sagesource.opensagent.core.agent.prompt;
 
+import ai.sagesource.opensagent.core.agent.exception.OpenSagentPromptException;
+
 /**
  * Prompt模板加载器接口
  * <p>
