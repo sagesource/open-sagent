@@ -1,4 +1,4 @@
-package ai.sagesource.opensagent.core.llm.tool.annotation;
+package ai.sagesource.opensagent.infrastructure.llm.tool.annotation;
 
 import ai.sagesource.opensagent.core.llm.tool.ToolParameterType;
 

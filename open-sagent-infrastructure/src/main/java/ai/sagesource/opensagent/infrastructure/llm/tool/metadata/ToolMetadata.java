@@ -1,4 +1,4 @@
-package ai.sagesource.opensagent.core.llm.tool.metadata;
+package ai.sagesource.opensagent.infrastructure.llm.tool.metadata;
 
 import ai.sagesource.opensagent.core.llm.tool.ToolDefinition;
 import lombok.AllArgsConstructor;

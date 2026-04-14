@@ -846,8 +846,73 @@ package ai.sagesource.opensagent.tools.tool; // AnnotatedTool 在 tools 模块
 package ai.sagesource.opensagent.core.llm.tool; // AnnotatedTool 在 core 模块
 ```
 
+### 变更 2（2026-04-14）：按照最新架构设计，将注解驱动 Tool 定义与解析实现从 core 迁移至 infrastructure
+
+**变更原因：**
+根据 `project_design_llm.md` 最新架构设计，Tool 模块的职责边界明确为：
+- **core 模块**：聚焦 Tool 的抽象定义（`ToolDefinition`/`ToolCall`/`ToolResult`/`ToolParameterType`）、执行接口（`Tool`/`AbstractTool`）及执行框架（`ToolRegistry`/`ToolExecutor`/`ToolUtils`）
+- **infrastructure 模块**：负责 Tool 的不同定义方式及对应的注册与解析方式。当前基于 `@Tool` + `@ToolParam` 的注解驱动定义方式属于具体的实现机制，应下沉至 infrastructure 模块
+
+通过本次重构，进一步解耦 core 模块与具体实现机制，使 core 保持纯粹抽象，infrastructure 承载注解解析与反射执行实现。
+
+**文件变更：**
+
+#### 从 open-sagent-core 移除
+
+| 文件路径 | 变更类型 | 说明 |
+|----------|----------|------|
+| `open-sagent-core/src/main/java/.../core/llm/tool/annotation/Tool.java` | 删除 | 迁移至 infrastructure |
+| `open-sagent-core/src/main/java/.../core/llm/tool/annotation/ToolParam.java` | 删除 | 迁移至 infrastructure |
+| `open-sagent-core/src/main/java/.../core/llm/tool/metadata/ToolMetadata.java` | 删除 | 迁移至 infrastructure |
+| `open-sagent-core/src/main/java/.../core/llm/tool/metadata/ToolParameterMetadata.java` | 删除 | 迁移至 infrastructure |
+| `open-sagent-core/src/main/java/.../core/llm/tool/parser/ToolMetadataParser.java` | 删除 | 迁移至 infrastructure |
+| `open-sagent-core/src/main/java/.../core/llm/tool/AnnotatedTool.java` | 删除 | 迁移至 infrastructure |
+| `open-sagent-core/src/test/java/.../core/llm/tool/AnnotatedToolTest.java` | 删除 | 迁移至 infrastructure |
+
+#### 在 open-sagent-infrastructure 新增
+
+| 文件路径 | 变更类型 | 说明 |
+|----------|----------|------|
+| `open-sagent-infrastructure/src/main/java/.../infrastructure/llm/tool/annotation/Tool.java` | 新增 | 从 core 迁移，调整包路径 |
+| `open-sagent-infrastructure/src/main/java/.../infrastructure/llm/tool/annotation/ToolParam.java` | 新增 | 从 core 迁移，调整包路径 |
+| `open-sagent-infrastructure/src/main/java/.../infrastructure/llm/tool/metadata/ToolMetadata.java` | 新增 | 从 core 迁移，调整包路径 |
+| `open-sagent-infrastructure/src/main/java/.../infrastructure/llm/tool/metadata/ToolParameterMetadata.java` | 新增 | 从 core 迁移，调整包路径 |
+| `open-sagent-infrastructure/src/main/java/.../infrastructure/llm/tool/parser/ToolMetadataParser.java` | 新增 | 从 core 迁移，调整包路径 |
+| `open-sagent-infrastructure/src/main/java/.../infrastructure/llm/tool/AnnotatedTool.java` | 新增 | 从 core 迁移，调整包路径 |
+| `open-sagent-infrastructure/src/test/java/.../infrastructure/llm/tool/AnnotatedToolTest.java` | 新增 | 从 core 迁移，调整包路径 |
+
+#### 其他修改
+
+| 文件路径 | 变更类型 | 说明 |
+|----------|----------|------|
+| `open-sagent-core/src/test/java/.../core/llm/tool/ToolDefinitionTest.java` | 修改 | 移除 `@Tool` 注解解析相关测试代码，仅保留 `ToolDefinition`/`ToolCall`/`ToolResult` 模型测试 |
+| `.agents/skills/references/llm_tool_definition.md` | 修改 | 更新 import 路径示例，指向 infrastructure 包 |
+
+**关键代码变更：**
+
+```java
+// 修改前（core 模块）
+package ai.sagesource.opensagent.core.llm.tool.annotation;
+
+// 修改后（infrastructure 模块）
+package ai.sagesource.opensagent.infrastructure.llm.tool.annotation;
+```
+
+```java
+// 修改前（core 模块）
+package ai.sagesource.opensagent.core.llm.tool;
+import ai.sagesource.opensagent.core.llm.tool.metadata.ToolMetadata;
+import ai.sagesource.opensagent.core.llm.tool.parser.ToolMetadataParser;
+
+// 修改后（infrastructure 模块）
+package ai.sagesource.opensagent.infrastructure.llm.tool;
+import ai.sagesource.opensagent.infrastructure.llm.tool.metadata.ToolMetadata;
+import ai.sagesource.opensagent.infrastructure.llm.tool.parser.ToolMetadataParser;
+```
+
 ## 7. 评审记录
 
 | 评审人 | 时间 | 结论 | 备注 |
 |--------|------|------|------|
 | 项目Owner | 2026-04-14 | 通过 | Tool执行框架保留在core模块 |
+| 项目Owner | 2026-04-14 | 通过 | 变更2：注解驱动Tool定义迁移至infrastructure |

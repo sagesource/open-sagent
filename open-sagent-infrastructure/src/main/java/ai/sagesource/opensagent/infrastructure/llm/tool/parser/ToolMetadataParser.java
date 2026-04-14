@@ -1,12 +1,12 @@
-package ai.sagesource.opensagent.core.llm.tool.parser;
+package ai.sagesource.opensagent.infrastructure.llm.tool.parser;
 
 import ai.sagesource.opensagent.core.llm.exception.OpenSagentToolException;
 import ai.sagesource.opensagent.core.llm.tool.ToolDefinition;
 import ai.sagesource.opensagent.core.llm.tool.ToolParameterType;
-import ai.sagesource.opensagent.core.llm.tool.annotation.Tool;
-import ai.sagesource.opensagent.core.llm.tool.annotation.ToolParam;
-import ai.sagesource.opensagent.core.llm.tool.metadata.ToolMetadata;
-import ai.sagesource.opensagent.core.llm.tool.metadata.ToolParameterMetadata;
+import ai.sagesource.opensagent.infrastructure.llm.tool.annotation.Tool;
+import ai.sagesource.opensagent.infrastructure.llm.tool.annotation.ToolParam;
+import ai.sagesource.opensagent.infrastructure.llm.tool.metadata.ToolMetadata;
+import ai.sagesource.opensagent.infrastructure.llm.tool.metadata.ToolParameterMetadata;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;

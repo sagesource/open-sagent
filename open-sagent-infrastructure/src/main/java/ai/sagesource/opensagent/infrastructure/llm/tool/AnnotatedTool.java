@@ -1,8 +1,12 @@
-package ai.sagesource.opensagent.core.llm.tool;
+package ai.sagesource.opensagent.infrastructure.llm.tool;
 
 import ai.sagesource.opensagent.core.llm.exception.OpenSagentToolException;
-import ai.sagesource.opensagent.core.llm.tool.metadata.ToolMetadata;
-import ai.sagesource.opensagent.core.llm.tool.metadata.ToolParameterMetadata;
+import ai.sagesource.opensagent.core.llm.tool.Tool;
+import ai.sagesource.opensagent.core.llm.tool.ToolCall;
+import ai.sagesource.opensagent.core.llm.tool.ToolDefinition;
+import ai.sagesource.opensagent.core.llm.tool.ToolResult;
+import ai.sagesource.opensagent.infrastructure.llm.tool.metadata.ToolMetadata;
+import ai.sagesource.opensagent.infrastructure.llm.tool.metadata.ToolParameterMetadata;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;

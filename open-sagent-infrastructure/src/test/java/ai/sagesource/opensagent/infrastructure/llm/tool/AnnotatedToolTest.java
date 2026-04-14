@@ -1,9 +1,13 @@
-package ai.sagesource.opensagent.core.llm.tool;
+package ai.sagesource.opensagent.infrastructure.llm.tool;
 
-import ai.sagesource.opensagent.core.llm.tool.annotation.Tool;
-import ai.sagesource.opensagent.core.llm.tool.annotation.ToolParam;
-import ai.sagesource.opensagent.core.llm.tool.metadata.ToolMetadata;
-import ai.sagesource.opensagent.core.llm.tool.parser.ToolMetadataParser;
+import ai.sagesource.opensagent.core.llm.tool.ToolCall;
+import ai.sagesource.opensagent.core.llm.tool.ToolDefinition;
+import ai.sagesource.opensagent.core.llm.tool.ToolParameterType;
+import ai.sagesource.opensagent.core.llm.tool.ToolResult;
+import ai.sagesource.opensagent.infrastructure.llm.tool.annotation.Tool;
+import ai.sagesource.opensagent.infrastructure.llm.tool.annotation.ToolParam;
+import ai.sagesource.opensagent.infrastructure.llm.tool.metadata.ToolMetadata;
+import ai.sagesource.opensagent.infrastructure.llm.tool.parser.ToolMetadataParser;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

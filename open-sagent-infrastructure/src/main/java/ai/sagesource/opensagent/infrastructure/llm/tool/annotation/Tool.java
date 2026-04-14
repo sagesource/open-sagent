@@ -1,4 +1,4 @@
-package ai.sagesource.opensagent.core.llm.tool.annotation;
+package ai.sagesource.opensagent.infrastructure.llm.tool.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

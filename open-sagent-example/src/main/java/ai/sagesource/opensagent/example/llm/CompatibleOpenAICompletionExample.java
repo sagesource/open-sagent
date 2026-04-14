@@ -10,6 +10,8 @@ import ai.sagesource.opensagent.core.llm.message.UserCompletionMessage;
 import ai.sagesource.opensagent.infrastructure.llm.openai.OpenAICompletionFactory;
 import ai.sagesource.opensagent.infrastructure.llm.openai.OpenAILLMClientFactory;
 
+import java.time.Duration;
+
 /**
  * 调用兼容OpenAI接口的第三方大模型示例
  * <p>
@@ -27,13 +29,14 @@ public class CompatibleOpenAICompletionExample {
                 .apiKey(DotEnvUtils.get("COMPATIBLE_OPENAI_API_KEY"))
                 .model(DotEnvUtils.get("COMPATIBLE_OPENAI_MODEL"))
                 .baseUrl(DotEnvUtils.get("COMPATIBLE_OPENAI_BASE_URL"))
+                .connectTimeout(Duration.ofSeconds(60))
                 .build();
 
         LLMClient     client     = OpenAILLMClientFactory.createClient(config);
         LLMCompletion completion = OpenAICompletionFactory.createCompletion(client);
 
         CompletionRequest request = CompletionRequest.builder()
-                .messages(java.util.List.of(UserCompletionMessage.of("请用一句话介绍自己")))
+                .messages(java.util.List.of(UserCompletionMessage.of("通过API调用千问时，超时时间的最佳配置是什么？")))
                 .maxTokens(65536)
                 .build();
 

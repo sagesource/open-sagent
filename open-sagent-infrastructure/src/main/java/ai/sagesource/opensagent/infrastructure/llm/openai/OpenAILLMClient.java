@@ -5,6 +5,7 @@ import ai.sagesource.opensagent.core.llm.client.LLMClientConfig;
 import ai.sagesource.opensagent.core.llm.exception.OpenSagentLLMException;
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.core.Timeout;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
@@ -69,8 +70,12 @@ public class OpenAILLMClient implements LLMClient {
         }
 
         // 设置超时
-        if (config.getConnectTimeout() != null) {
-            builder.timeout(config.getConnectTimeout());
+        if (config.getConnectTimeout() != null || config.getReadTimeout() != null) {
+            Timeout timeout = Timeout.builder()
+                    .connect(config.getConnectTimeout())
+                    .read(config.getReadTimeout())
+                    .build();
+            builder.timeout(timeout);
         }
 
         // 设置代理

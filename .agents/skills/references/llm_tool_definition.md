@@ -23,8 +23,8 @@ description: 如何定义一个Tool（基于注解方式）
 package ai.sagesource.opensagent.example.tools;
 
 import ai.sagesource.opensagent.core.llm.tool.ToolParameterType;
-import ai.sagesource.opensagent.core.llm.tool.annotation.Tool;
-import ai.sagesource.opensagent.core.llm.tool.annotation.ToolParam;
+import ai.sagesource.opensagent.infrastructure.llm.tool.annotation.Tool;
+import ai.sagesource.opensagent.infrastructure.llm.tool.annotation.ToolParam;
 
 public class WeatherService {
 
@@ -43,12 +43,12 @@ public class WeatherService {
 ```java
 package ai.sagesource.opensagent.example;
 
-import ai.sagesource.opensagent.core.llm.tool.AnnotatedTool;
 import ai.sagesource.opensagent.core.llm.tool.Tool;
 import ai.sagesource.opensagent.core.llm.tool.ToolExecutor;
 import ai.sagesource.opensagent.core.llm.tool.ToolRegistry;
-import ai.sagesource.opensagent.core.llm.tool.metadata.ToolMetadata;
-import ai.sagesource.opensagent.core.llm.tool.parser.ToolMetadataParser;
+import ai.sagesource.opensagent.infrastructure.llm.tool.AnnotatedTool;
+import ai.sagesource.opensagent.infrastructure.llm.tool.metadata.ToolMetadata;
+import ai.sagesource.opensagent.infrastructure.llm.tool.parser.ToolMetadataParser;
 import ai.sagesource.opensagent.example.tools.WeatherService;
 
 import java.util.List;

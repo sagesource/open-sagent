@@ -207,6 +207,7 @@ import ai.sagesource.opensagent.core.llm.client.LLMClientConfig;
 import ai.sagesource.opensagent.core.llm.exception.OpenSagentLLMException;
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.core.Timeout;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
@@ -271,8 +272,12 @@ public class OpenAILLMClient implements LLMClient {
         }
 
         // 设置超时
-        if (config.getConnectTimeout() != null) {
-            builder.timeout(config.getConnectTimeout());
+        if (config.getConnectTimeout() != null || config.getReadTimeout() != null) {
+            Timeout timeout = Timeout.builder()
+                    .connect(config.getConnectTimeout())
+                    .read(config.getReadTimeout())
+                    .build();
+            builder.timeout(timeout);
         }
 
         // 设置代理
@@ -756,6 +761,40 @@ public class OpenSagentLLMException extends OpenSagentException { }
 | `open-sagent-infrastructure/.../OpenAILLMClient.java` | 修改 | 移除 `getProviderType()` 实现和相关导入 |
 | `open-sagent-infrastructure/.../OpenAILLMClientFactory.java` | 修改 | 移除对 `providerType` 的验证 |
 
+### 变更 3（2026-04-14）：修复 OpenAI Client 的 timeout 配置，支持独立的 readTimeout
+
+**变更原因：**
+1. 原实现仅使用 `builder.timeout(Duration)` 设置 connectTimeout，但 OpenAI Java SDK 的 `timeout(Duration)` 实际设置的是请求整体超时（request timeout）
+2. `LLMClientConfig` 中定义的 `readTimeout` 字段未实际生效
+3. 应使用 `com.openai.core.Timeout` 的 Builder 分别设置 `connectTimeout` 和 `readTimeout`
+
+**文件变更：**
+
+| 文件路径 | 变更类型 | 说明 |
+|----------|----------|------|
+| `open-sagent-infrastructure/.../OpenAILLMClient.java` | 修改 | 使用 `Timeout.builder()` 分别设置 connect 和 read 超时 |
+
+**关键代码变更：**
+```java
+// 修改前
+// 设置超时
+if (config.getConnectTimeout() != null) {
+    builder.timeout(config.getConnectTimeout());
+}
+
+// 修改后
+import com.openai.core.Timeout;
+
+// 设置超时
+if (config.getConnectTimeout() != null || config.getReadTimeout() != null) {
+    Timeout timeout = Timeout.builder()
+            .connect(config.getConnectTimeout())
+            .read(config.getReadTimeout())
+            .build();
+    builder.timeout(timeout);
+}
+```
+
 ## 6. 评审记录
 
 | 评审人 | 时间 | 结论 | 备注 |
@@ -763,3 +802,4 @@ public class OpenSagentLLMException extends OpenSagentException { }
 | User | 2026-04-13 | 需修改 | 问题1：OpenSagentLLMException不符合异常体系，需要继承OpenSagentException基类，基类定义在base模块 |
 | User | 2026-04-13 | 需修改 | 问题2：LLMProviderType不需要，基于不同Provider生成不同实现即可 |
 | User | 2026-04-13 | 通过 | 方案通过，可以实施代码变更 |
+| User | 2026-04-14 | 通过 | 变更3：修复OpenAI Client timeout配置，支持独立readTimeout |
