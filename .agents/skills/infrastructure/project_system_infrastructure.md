@@ -10,6 +10,7 @@ open-sagent/
 ├── open-sagent-web     WEB-AGENT实现模块
 ├── open-sagent-cli     CLI-AGENT实现模块
 ├── open-sagent-tools   AGENT TOOL实现
-├── open-sagent-infrastructure  基础设施层：针对Core模块的抽象提供具体实现，例如对接不同LLM厂商接口的实现
+├── open-sagent-infrastructure  基础设施层：针对Core模块的抽象提供具体实现，例如基于注解实现Tool注册
+├── open-sagent-infrastructure-openai 厂商基础设施层：针对不同的LLM厂商提供具体实现，主要是针对大模型交互相关
 ├── open-sagent-example 示例代码模块
 ```

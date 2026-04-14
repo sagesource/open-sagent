@@ -10,9 +10,9 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>open-sagent-infrastructure</artifactId>
-    <name>Open Sagent Infrastructure</name>
-    <description>基础设施层：针对Core模块的抽象提供具体实现</description>
+    <artifactId>open-sagent-infrastructure-openai</artifactId>
+    <name>Open Sagent Infrastructure - OpenAI</name>
+    <description>厂商基础设施层：针对OpenAI及其兼容接口的LLM交互具体实现</description>
 
     <dependencies>
         <!-- Core Module -->
@@ -20,6 +20,12 @@
             <groupId>ai.sagesource</groupId>
             <artifactId>open-sagent-core</artifactId>
             <version>${revision}</version>
+        </dependency>
+
+        <!-- OpenAI Java SDK -->
+        <dependency>
+            <groupId>com.openai</groupId>
+            <artifactId>openai-java</artifactId>
         </dependency>
 
         <!-- Lombok -->
@@ -35,10 +41,10 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
-        <!-- Spring Context (for @Configuration, etc.) -->
+        <!-- Fastjson2 (directly used in OpenAICompletion) -->
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
         </dependency>
 
         <!-- Test -->

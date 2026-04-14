@@ -37,6 +37,13 @@
             <version>${revision}</version>
         </dependency>
 
+        <!-- OpenAI Infrastructure Module -->
+        <dependency>
+            <groupId>ai.sagesource</groupId>
+            <artifactId>open-sagent-infrastructure-openai</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
         <!-- Core Module -->
         <dependency>
             <groupId>ai.sagesource</groupId>

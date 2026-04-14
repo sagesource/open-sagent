@@ -134,6 +134,7 @@
         <module>open-sagent-base</module>
         <module>open-sagent-core</module>
         <module>open-sagent-infrastructure</module>
+        <module>open-sagent-infrastructure-openai</module>
         <module>open-sagent-tools</module>
         <module>open-sagent-web</module>
         <module>open-sagent-cli</module>
