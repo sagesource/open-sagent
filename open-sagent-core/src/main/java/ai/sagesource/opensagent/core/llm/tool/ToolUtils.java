@@ -1,7 +1,4 @@
-package ai.sagesource.opensagent.tools.utils;
-
-import ai.sagesource.opensagent.core.llm.tool.ToolDefinition;
-import ai.sagesource.opensagent.core.llm.tool.ToolParameterType;
+package ai.sagesource.opensagent.core.llm.tool;
 
 import java.util.ArrayList;
 import java.util.Arrays;

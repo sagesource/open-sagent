@@ -1,8 +1,6 @@
-package ai.sagesource.opensagent.tools.registry;
+package ai.sagesource.opensagent.core.llm.tool;
 
 import ai.sagesource.opensagent.core.llm.exception.OpenSagentToolException;
-import ai.sagesource.opensagent.core.llm.tool.ToolDefinition;
-import ai.sagesource.opensagent.tools.tool.Tool;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

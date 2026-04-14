@@ -1,8 +1,4 @@
-package ai.sagesource.opensagent.tools.tool;
-
-import ai.sagesource.opensagent.core.llm.tool.ToolCall;
-import ai.sagesource.opensagent.core.llm.tool.ToolDefinition;
-import ai.sagesource.opensagent.core.llm.tool.ToolResult;
+package ai.sagesource.opensagent.core.llm.tool;
 
 /**
  * Tool执行接口

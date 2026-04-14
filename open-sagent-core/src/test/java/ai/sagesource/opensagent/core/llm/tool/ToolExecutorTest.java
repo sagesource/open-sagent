@@ -1,12 +1,6 @@
-package ai.sagesource.opensagent.tools.executor;
+package ai.sagesource.opensagent.core.llm.tool;
 
 import ai.sagesource.opensagent.core.llm.exception.OpenSagentToolException;
-import ai.sagesource.opensagent.core.llm.tool.ToolCall;
-import ai.sagesource.opensagent.core.llm.tool.ToolDefinition;
-import ai.sagesource.opensagent.core.llm.tool.ToolResult;
-import ai.sagesource.opensagent.tools.registry.ToolRegistry;
-import ai.sagesource.opensagent.tools.tool.AbstractTool;
-import ai.sagesource.opensagent.tools.tool.Tool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

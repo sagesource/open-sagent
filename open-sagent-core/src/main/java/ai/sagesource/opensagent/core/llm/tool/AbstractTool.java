@@ -1,9 +1,6 @@
-package ai.sagesource.opensagent.tools.tool;
+package ai.sagesource.opensagent.core.llm.tool;
 
 import ai.sagesource.opensagent.core.llm.exception.OpenSagentToolException;
-import ai.sagesource.opensagent.core.llm.tool.ToolCall;
-import ai.sagesource.opensagent.core.llm.tool.ToolDefinition;
-import ai.sagesource.opensagent.core.llm.tool.ToolResult;
 import lombok.extern.slf4j.Slf4j;
 
 /**

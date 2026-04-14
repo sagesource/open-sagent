@@ -1,9 +1,5 @@
-package ai.sagesource.opensagent.tools.executor;
+package ai.sagesource.opensagent.core.llm.tool;
 
-import ai.sagesource.opensagent.core.llm.tool.ToolCall;
-import ai.sagesource.opensagent.core.llm.tool.ToolResult;
-import ai.sagesource.opensagent.tools.registry.ToolRegistry;
-import ai.sagesource.opensagent.tools.tool.Tool;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
