@@ -76,6 +76,11 @@ public interface Test {
 - 模块间不允许互相依赖
 - 如果依赖的模块已经包含的依赖，不需要再次引用
 
+## Example示例代码生成规范
+
+- 涉及到获取敏感配置信息的，例如API-KEY，使用DotEnv模式获取
+- 中间过程的功能无需生成Example：例如为LLMClient、Completion的使用生成Example，如何创建Tool无需生成
+
 ## Build Commands
 
 ### 编译整个项目

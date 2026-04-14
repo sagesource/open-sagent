@@ -56,4 +56,21 @@ public class OpenAILLMClientFactory {
                 .build();
         return createClient(config);
     }
+
+    /**
+     * 使用自定义BaseURL快速创建客户端（用于兼容OpenAI的第三方接口）
+     *
+     * @param apiKey  API密钥
+     * @param model   模型名称
+     * @param baseUrl 自定义基础URL（如 https://api.deepseek.com/v1）
+     * @return LLMClient实例
+     */
+    public static LLMClient createClient(String apiKey, String model, String baseUrl) {
+        LLMClientConfig config = LLMClientConfig.builder()
+                .apiKey(apiKey)
+                .model(model)
+                .baseUrl(baseUrl)
+                .build();
+        return createClient(config);
+    }
 }

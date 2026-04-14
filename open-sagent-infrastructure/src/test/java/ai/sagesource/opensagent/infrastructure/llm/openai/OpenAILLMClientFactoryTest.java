@@ -92,4 +92,17 @@ class OpenAILLMClientFactoryTest {
         );
         assertTrue(exception.getMessage().contains("模型名称不能为空"));
     }
+
+    @Test
+    @DisplayName("使用自定义BaseURL创建客户端 - 成功")
+    void testCreateClientWithBaseUrl() {
+        // 执行
+        LLMClient client = OpenAILLMClientFactory.createClient(
+                "test-api-key", "deepseek-chat", "https://api.deepseek.com/v1");
+
+        // 验证
+        assertNotNull(client, "客户端不应为空");
+        assertEquals("deepseek-chat", client.getConfig().getModel(), "模型名称应一致");
+        assertEquals("https://api.deepseek.com/v1", client.getConfig().getBaseUrl(), "BaseURL应一致");
+    }
 }

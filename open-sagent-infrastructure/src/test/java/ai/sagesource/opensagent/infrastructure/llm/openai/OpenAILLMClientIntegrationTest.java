@@ -67,4 +67,28 @@ class OpenAILLMClientIntegrationTest {
         assertNotNull(client);
         assertTrue(client.isHealthy());
     }
+
+    @Test
+    @DisplayName("使用兼容OpenAI的第三方BaseURL创建客户端 - 成功")
+    void testCreateClientWithCompatibleBaseUrl() {
+        // 示例：通过环境变量获取兼容接口的密钥和地址
+        String compatibleApiKey = DotEnvUtils.get("COMPATIBLE_OPENAI_API_KEY");
+        String compatibleBaseUrl = DotEnvUtils.get("COMPATIBLE_OPENAI_BASE_URL");
+        String compatibleModel = DotEnvUtils.get("COMPATIBLE_OPENAI_MODEL");
+
+        // 跳过测试如果未配置兼容接口参数
+        if (compatibleApiKey == null || compatibleApiKey.isEmpty()
+                || compatibleBaseUrl == null || compatibleBaseUrl.isEmpty()
+                || compatibleModel == null || compatibleModel.isEmpty()) {
+            return;
+        }
+
+        // 构造带自定义BaseURL的客户端（如 DeepSeek、SiliconFlow 等）
+        LLMClient client = OpenAILLMClientFactory.createClient(
+                compatibleApiKey, compatibleModel, compatibleBaseUrl);
+
+        // 验证
+        assertNotNull(client);
+        assertEquals(compatibleBaseUrl, client.getConfig().getBaseUrl());
+    }
 }

@@ -30,6 +30,20 @@
             <version>${revision}</version>
         </dependency>
 
+        <!-- Infrastructure Module -->
+        <dependency>
+            <groupId>ai.sagesource</groupId>
+            <artifactId>open-sagent-infrastructure</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <!-- Core Module -->
+        <dependency>
+            <groupId>ai.sagesource</groupId>
+            <artifactId>open-sagent-core</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

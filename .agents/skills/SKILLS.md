@@ -25,6 +25,7 @@
 | 001  | plan/001-LLM模块-Client设计方案.md  | LLM客户端模块设计方案 |
 | 002  | plan/002-LLM模块-Message设计方案.md | LLM消息模块设计方案  |
 | 003  | plan/003-LLM模块-Tool设计方案.md    | LLM工具模块设计方案   |
+| 004  | plan/004-LLM模块-Completion设计方案.md | LLM对话补全模块设计方案 |
 
 ## 引用类SKILLS
 
