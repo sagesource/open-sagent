@@ -29,6 +29,7 @@
 | 004  | plan/004-LLM模块-Completion设计方案.md | LLM对话补全模块设计方案 |
 | 005  | plan/005-Agent模块-Prompt设计方案.md    | Agent-Prompt模块设计方案 |
 | 006  | plan/006-LLM厂商模块拆分-OpenAI基础设施层独立模块设计方案.md | LLM厂商模块拆分，将OpenAI实现独立为infrastructure-openai模块 |
+| 008  | plan/008-Agent模块-Memory设计方案.md    | Agent-Memory模块设计方案 |
 
 ## 引用类SKILLS
 
