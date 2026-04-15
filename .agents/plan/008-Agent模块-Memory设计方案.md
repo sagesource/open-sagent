@@ -54,8 +54,8 @@ open-sagent-infrastructure (具体实现层)
 
 | 文件路径 | 变更类型 | 说明 |
 |----------|----------|------|
-| `open-sagent-infrastructure/src/main/java/ai/sagesource/opensagent/infrastructure/agent/memory/SimpleMemory.java` | 新增 | 基于内存的Memory实现 |
-| `open-sagent-infrastructure/src/test/java/ai/sagesource/opensagent/infrastructure/agent/memory/SimpleMemoryTest.java` | 新增 | SimpleMemory单元测试 |
+| `open-sagent-infrastructure/src/main/java/ai/sagesource/opensagent/infrastructure/agent/memory/SimpleMemory.java` | 修改 | 基于内存的Memory实现，增加滑动窗口压缩、SYSTEM消息过滤、TOOL消息去重、窗口大小可配置 |
+| `open-sagent-infrastructure/src/test/java/ai/sagesource/opensagent/infrastructure/agent/memory/SimpleMemoryTest.java` | 修改 | SimpleMemory单元测试，补充滑动窗口、消息过滤、TOOL去重相关测试 |
 
 ### 2.3 详细变更内容
 
@@ -341,6 +341,7 @@ package ai.sagesource.opensagent.infrastructure.agent.memory;
 
 import ai.sagesource.opensagent.core.agent.memory.*;
 import ai.sagesource.opensagent.core.llm.message.CompletionMessage;
+import ai.sagesource.opensagent.core.llm.message.MessageRole;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -350,13 +351,25 @@ import java.util.UUID;
 /**
  * 基于内存的简单Memory实现
  * <p>
- * 将某一个对话窗的对话历史保存在内存中；无记忆压缩功能（压缩操作直接返回跳过结果）
+ * 将某一个对话窗的对话历史保存在内存中；
+ * 使用滑动时间窗模式进行记忆压缩，压缩时保留最近窗口大小的会话信息；
+ * 压缩时剔除SYSTEM消息，多个TOOL消息只保留最新一次
  *
  * @author: sage.xue
  * @time: 2026/4/14
  */
 @Slf4j
 public class SimpleMemory implements Memory {
+
+    /**
+     * 默认滑动窗口大小
+     */
+    private static final int DEFAULT_WINDOW_SIZE = 50;
+
+    /**
+     * 滑动窗口大小（每次压缩时保留的最近未压缩消息数量）
+     */
+    private final int windowSize;
 
     /**
      * 完整对话历史
@@ -369,9 +382,17 @@ public class SimpleMemory implements Memory {
     private final List<CompletionMessage> uncompressedMessages = new ArrayList<>();
 
     /**
-     * 记忆历史（SimpleMemory中为空列表，仅作结构保留）
+     * 记忆历史
      */
     private final List<MemoryItem> memoryItems = new ArrayList<>();
+
+    public SimpleMemory() {
+        this(DEFAULT_WINDOW_SIZE);
+    }
+
+    public SimpleMemory(int windowSize) {
+        this.windowSize = windowSize > 0 ? windowSize : DEFAULT_WINDOW_SIZE;
+    }
 
     @Override
     public void addMessage(CompletionMessage message) {
@@ -424,14 +445,47 @@ public class SimpleMemory implements Memory {
                 return CompressionResult.skipped("无可压缩的对话历史");
             }
 
-            // SimpleMemory 无实际压缩能力，仅将所有未压缩对话的文本拼接作为记忆内容
+            int compressCount = Math.max(0, uncompressedMessages.size() - windowSize);
+            if (compressCount == 0) {
+                log.warn("> Memory | 未压缩消息数量未超过滑动窗口阈值 {}，无需压缩 <", windowSize);
+                return CompressionResult.skipped("未压缩消息数量未超过滑动窗口阈值，无需压缩");
+            }
+
+            List<CompletionMessage> toCompress = new ArrayList<>(uncompressedMessages.subList(0, compressCount));
+
+            // 找出最后一个 TOOL 消息的索引
+            int lastToolIndex = -1;
+            for (int i = 0; i < toCompress.size(); i++) {
+                if (toCompress.get(i).getRole() == MessageRole.TOOL) {
+                    lastToolIndex = i;
+                }
+            }
+
             StringBuilder sb = new StringBuilder();
             String lastMsgId = null;
-            for (CompletionMessage msg : uncompressedMessages) {
+            for (int i = 0; i < toCompress.size(); i++) {
+                CompletionMessage msg = toCompress.get(i);
+                if (msg.getRole() == MessageRole.SYSTEM) {
+                    continue;
+                }
+                if (msg.getRole() == MessageRole.TOOL && i != lastToolIndex) {
+                    continue;
+                }
                 sb.append("[").append(msg.getRole()).append("]: ").append(msg.getTextContent()).append("\n");
                 if (msg.getMessageId() != null) {
                     lastMsgId = msg.getMessageId();
                 }
+            }
+
+            // 清除已压缩部分
+            for (int i = 0; i < compressCount; i++) {
+                uncompressedMessages.remove(0);
+            }
+
+            // 如果过滤后没有有效内容，不生成 MemoryItem
+            if (sb.length() == 0) {
+                log.info("> Memory | 过滤后无可压缩的有效对话历史 <");
+                return CompressionResult.skipped("过滤后无可压缩的有效对话历史");
             }
 
             String lastMemoryItemId = memoryItems.isEmpty() ? null : memoryItems.get(memoryItems.size() - 1).getMemoryItemId();
@@ -445,9 +499,9 @@ public class SimpleMemory implements Memory {
                     .build();
 
             memoryItems.add(item);
-            uncompressedMessages.clear();
 
-            log.info("> Memory | 简单压缩完成, memoryItemId: {} <", item.getMemoryItemId());
+            log.info("> Memory | 简单压缩完成, memoryItemId: {}, 压缩消息数: {}, 保留消息数: {} <",
+                    item.getMemoryItemId(), compressCount, uncompressedMessages.size());
             return CompressionResult.success(item);
         }
     }
@@ -591,6 +645,8 @@ import ai.sagesource.opensagent.core.agent.memory.CompressionResult;
 import ai.sagesource.opensagent.core.agent.memory.MemoryItem;
 import ai.sagesource.opensagent.core.llm.message.AssistantCompletionMessage;
 import ai.sagesource.opensagent.core.llm.message.CompletionMessage;
+import ai.sagesource.opensagent.core.llm.message.SystemCompletionMessage;
+import ai.sagesource.opensagent.core.llm.message.ToolCompletionMessage;
 import ai.sagesource.opensagent.core.llm.message.UserCompletionMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -729,6 +785,93 @@ class SimpleMemoryTest {
         assertEquals("msg-002", second.getMemoryItem().getLastMessageId());
         assertEquals(first.getMemoryItem().getMemoryItemId(), second.getMemoryItem().getLastMemoryItemId());
     }
+
+    @Test
+    @DisplayName("滑动时间窗压缩 - 保留窗口内消息")
+    void testCompressWithSlidingWindow() {
+        SimpleMemory memory = new SimpleMemory(3);
+        memory.addMessage(UserCompletionMessage.of("msg1"));
+        memory.addMessage(UserCompletionMessage.of("msg2"));
+        memory.addMessage(UserCompletionMessage.of("msg3"));
+        memory.addMessage(UserCompletionMessage.of("msg4"));
+        memory.addMessage(UserCompletionMessage.of("msg5"));
+
+        CompressionResult result = memory.compress();
+
+        assertTrue(result.isSuccess());
+        assertEquals(3, memory.getUncompressedMessages().size());
+        assertEquals(2, memory.getMessages().size() - memory.getUncompressedMessages().size());
+    }
+
+    @Test
+    @DisplayName("压缩时未超过窗口阈值 - 返回跳过")
+    void testCompressWhenBelowWindowThreshold() {
+        SimpleMemory memory = new SimpleMemory(5);
+        memory.addMessage(UserCompletionMessage.of("msg1"));
+        memory.addMessage(UserCompletionMessage.of("msg2"));
+
+        CompressionResult result = memory.compress();
+
+        assertFalse(result.isSuccess());
+        assertEquals("未压缩消息数量未超过滑动窗口阈值，无需压缩", result.getMessage());
+    }
+
+    @Test
+    @DisplayName("压缩时剔除SYSTEM消息 - 成功")
+    void testCompressFiltersSystemMessages() {
+        SimpleMemory memory = new SimpleMemory(1);
+        memory.addMessage(SystemCompletionMessage.of("系统提示"));
+        memory.addMessage(UserCompletionMessage.of("你好"));
+
+        CompressionResult result = memory.compress();
+
+        assertTrue(result.isSuccess());
+        assertNotNull(result.getMemoryItem());
+        assertFalse(result.getMemoryItem().getContent().contains("SYSTEM"));
+        assertTrue(result.getMemoryItem().getContent().contains("USER"));
+    }
+
+    @Test
+    @DisplayName("压缩时TOOL消息只保留最新一次 - 成功")
+    void testCompressKeepsLatestToolMessageOnly() {
+        SimpleMemory memory = new SimpleMemory(1);
+        memory.addMessage(ToolCompletionMessage.of("call-1", "tool1", "结果1"));
+        memory.addMessage(UserCompletionMessage.of("谢谢"));
+        memory.addMessage(ToolCompletionMessage.of("call-2", "tool2", "结果2"));
+
+        CompressionResult result = memory.compress();
+
+        assertTrue(result.isSuccess());
+        String content = result.getMemoryItem().getContent();
+        assertEquals(1, countOccurrences(content, "TOOL"));
+        assertTrue(content.contains("结果2"));
+        assertFalse(content.contains("结果1"));
+    }
+
+    @Test
+    @DisplayName("过滤后无有效消息 - 返回跳过并清除已处理部分")
+    void testCompressAllFiltered() {
+        SimpleMemory memory = new SimpleMemory(1);
+        memory.addMessage(SystemCompletionMessage.of("系统提示1"));
+        memory.addMessage(SystemCompletionMessage.of("系统提示2"));
+        memory.addMessage(UserCompletionMessage.of("你好"));
+
+        CompressionResult result = memory.compress();
+
+        assertFalse(result.isSuccess());
+        assertEquals("过滤后无可压缩的有效对话历史", result.getMessage());
+        assertEquals(1, memory.getUncompressedMessages().size());
+    }
+
+    private int countOccurrences(String text, String sub) {
+        int count = 0;
+        int idx = 0;
+        while ((idx = text.indexOf(sub, idx)) != -1) {
+            count++;
+            idx += sub.length();
+        }
+        return count;
+    }
 }
 ```
 
@@ -779,7 +922,7 @@ open-sagent-infrastructure (具体实现)
 |--------|------|----------|
 | `MemoryItemTest` | core | 记忆项创建、关联ID验证 |
 | `CompressionResultTest` | core | 成功/跳过结果构建 |
-| `SimpleMemoryTest` | infrastructure | 消息添加、批量添加、压缩、清空、关联ID验证 |
+| `SimpleMemoryTest` | infrastructure | 消息添加、批量添加、压缩、清空、关联ID验证、滑动窗口压缩、SYSTEM消息过滤、TOOL消息去重 |
 
 ### 4.2 编译验证
 
@@ -787,9 +930,83 @@ open-sagent-infrastructure (具体实现)
 mvn clean compile test-compile -pl open-sagent-core,open-sagent-infrastructure -am
 ```
 
-## 5. 评审记录
+## 5. 方案变更记录
+
+### 变更 1（2026-04-15）：SimpleMemory 实现补全，与架构设计保持一致
+
+**变更原因：**
+现有 `SimpleMemory` 实现与 `project_design_agent.md` 中 Memory 模块架构设计不一致，缺少以下关键能力：
+1. 未实现滑动时间窗模式记忆压缩（应保留最近可配置条数的未压缩消息）
+2. 压缩时未剔除 SYSTEM 消息
+3. 压缩时未对 TOOL 消息进行去重（多个 TOOL 消息应只保留最新一次）
+
+**文件变更：**
+
+| 文件路径 | 变更类型 | 说明 |
+|----------|----------|------|
+| `open-sagent-infrastructure/src/main/java/ai/sagesource/opensagent/infrastructure/agent/memory/SimpleMemory.java` | 修改 | 增加滑动窗口压缩、SYSTEM消息过滤、TOOL消息去重、窗口大小可配置 |
+| `open-sagent-infrastructure/src/test/java/ai/sagesource/opensagent/infrastructure/agent/memory/SimpleMemoryTest.java` | 修改 | 补充滑动窗口、消息过滤、TOOL去重相关单元测试 |
+
+**关键代码变更：**
+
+1. 新增滑动窗口大小配置：
+```java
+private static final int DEFAULT_WINDOW_SIZE = 50;
+private final int windowSize;
+
+public SimpleMemory() {
+    this(DEFAULT_WINDOW_SIZE);
+}
+
+public SimpleMemory(int windowSize) {
+    this.windowSize = windowSize > 0 ? windowSize : DEFAULT_WINDOW_SIZE;
+}
+```
+
+2. 压缩逻辑增加滑动窗口和消息过滤：
+```java
+int compressCount = Math.max(0, uncompressedMessages.size() - windowSize);
+if (compressCount == 0) {
+    return CompressionResult.skipped("未压缩消息数量未超过滑动窗口阈值，无需压缩");
+}
+
+List<CompletionMessage> toCompress = new ArrayList<>(uncompressedMessages.subList(0, compressCount));
+
+// 找出最后一个 TOOL 消息的索引
+int lastToolIndex = -1;
+for (int i = 0; i < toCompress.size(); i++) {
+    if (toCompress.get(i).getRole() == MessageRole.TOOL) {
+        lastToolIndex = i;
+    }
+}
+
+// 过滤 SYSTEM 消息和多余的 TOOL 消息
+StringBuilder sb = new StringBuilder();
+String lastMsgId = null;
+for (int i = 0; i < toCompress.size(); i++) {
+    CompletionMessage msg = toCompress.get(i);
+    if (msg.getRole() == MessageRole.SYSTEM) {
+        continue;
+    }
+    if (msg.getRole() == MessageRole.TOOL && i != lastToolIndex) {
+        continue;
+    }
+    sb.append("[").append(msg.getRole()).append("]: ").append(msg.getTextContent()).append("\n");
+    if (msg.getMessageId() != null) {
+        lastMsgId = msg.getMessageId();
+    }
+}
+
+// 清除已压缩部分
+for (int i = 0; i < compressCount; i++) {
+    uncompressedMessages.remove(0);
+}
+```
+
+## 6. 评审记录
 
 | 评审人 | 时间 | 结论 | 备注 |
 |--------|------|------|------|
 | sage | 2026/4/15 | 通过 | 按方案实施 |
 | Kimi | 2026/4/15 | 实施完成 | 所有文件已创建，编译通过，测试全部通过（core: 32 tests, infrastructure: 25 tests） |
+| Kimi | 2026/4/15 | 通过 | SimpleMemory滑动窗口与消息过滤变更 |
