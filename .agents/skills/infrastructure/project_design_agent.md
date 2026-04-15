@@ -59,3 +59,7 @@ Agent核心方法：同步调用、同步流式调用、异步调用、异步流
 - 每次调用Completion时，组装消息历史逻辑：SYSTEM PROMPT + 记忆中未压缩的对话历史 + 最新的对话
 - Completion响应完成后，要在记忆中保存对话历史(本次用户消息 + 本次模型响应消息)
 - 如果开启工具支持，则调用Completion时要传递工具列表；如果响应了TOOL消息，要执行工具，并将执行结果作为TOOL消息保存在记忆中
+
+2. ReActAgent
+
+3. ScheduleAgent
