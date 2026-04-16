@@ -32,6 +32,7 @@
 | 006  | plan/006-LLM厂商模块拆分-OpenAI基础设施层独立模块设计方案.md | LLM厂商模块拆分，将OpenAI实现独立为infrastructure-openai模块 |
 | 007  | plan/007-Agent模块-异常处理方案.md                | Agent异常处理方案                                   |
 | 008  | plan/008-Agent模块-Memory设计方案.md            | Agent-Memory模块设计方案                            |
+| 009  | plan/009-Agent模块-Agent设计方案.md             | Agent核心模块设计方案                               |
 
 ## 引用类SKILLS
 
