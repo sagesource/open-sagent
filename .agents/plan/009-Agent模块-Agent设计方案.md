@@ -966,4 +966,5 @@ mvn clean test -pl open-sagent-core,open-sagent-infrastructure -am
 | 评审人 | 时间 | 结论 | 备注 |
 |--------|------|------|------|
 | sage | 2026-04-16 | 不通过 | 问题1：Agent接口chat/stream等方法参数类型由CompletionMessage改为显式传入UserCompletionMessage，已修正 |
+| sage | 2026-04-18 | 通过 | 按方案实施 |
 | | | | |
