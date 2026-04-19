@@ -41,6 +41,19 @@
             <artifactId>spring-context</artifactId>
         </dependency>
 
+        <!-- SQLite JDBC -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.45.2.0</version>
+        </dependency>
+
+        <!-- Fastjson2 -->
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

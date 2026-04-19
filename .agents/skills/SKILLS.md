@@ -34,6 +34,7 @@
 | 008  | plan/008-Agent模块-Memory设计方案.md            | Agent-Memory模块设计方案                            |
 | 009  | plan/009-Agent模块-Agent设计方案.md             | Agent核心模块设计方案                               |
 | 010  | plan/010-Agent模块-ReActAgent设计方案.md        | ReActAgent多轮推理Agent设计方案                      |
+| 011  | plan/011-Agent模块-MultipleSQLLiteMemory设计方案.md | Agent-MultipleSQLLiteMemory持久化内存设计方案        |
 
 ## 引用类SKILLS
 

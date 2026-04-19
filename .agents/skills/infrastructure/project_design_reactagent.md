@@ -16,3 +16,7 @@ description: 项目系统设计方案，ReActAgent相关
 7. 与SimpleAgent实现一致，支持Memory、中断、统计token用量
 8. 全程使用流式输出，completion已经支持流式输出中最后返回工具调用信息；可以一边输出流式返回的文本，本轮迭代完成后根据返回的工具信息调用工具
 9. 当执行工具时，callback中固定返回内容: AGENT_ACTION[EXECUTE_TOOL], 后续客户端会根据这个特殊的内容，执行不同的展示逻辑
+10. 针对记忆压缩的处理：
+    - 首先调用Memory模块判断是否需要压缩
+    - 返回需要压缩：callback中固定返回内容：AGENT_ACTION[EXECUTE_MEMORY_COMPORESS],后续客户端会根据这个特殊的内容，执行不同的展示逻辑
+    - 执行压缩逻辑
