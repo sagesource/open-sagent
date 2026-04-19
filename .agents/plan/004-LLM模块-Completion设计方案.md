@@ -485,6 +485,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
@@ -516,7 +517,7 @@ public class OpenAICompletion implements LLMCompletion {
     public CompletionResponse complete(CompletionRequest request) {
         try {
             log.info("> Completion | 开始同步调用，模型: {} <", model);
-            ChatCompletionCreateParams params = buildParams(request, false);
+            ChatCompletionCreateParams params = buildParams(request);
             ChatCompletion completion = client.chat().completions().create(params);
             CompletionResponse response = mapResponse(completion);
             log.info("> Completion | 同步调用完成，finishReason: {} <", response.getFinishReason());
@@ -538,10 +539,19 @@ public class OpenAICompletion implements LLMCompletion {
     @Override
     public CompletionCancelToken stream(CompletionRequest request, Consumer<StreamChunk> consumer) {
         AtomicBoolean cancelled = new AtomicBoolean(false);
+        AtomicReference<AutoCloseable> closeableRef = new AtomicReference<>();
         CompletionCancelToken token = new CompletionCancelToken() {
             @Override
             public void cancel() {
                 cancelled.set(true);
+                AutoCloseable c = closeableRef.get();
+                if (c != null) {
+                    try {
+                        c.close();
+                    } catch (Exception ignored) {
+                        // 忽略关闭异常
+                    }
+                }
             }
 
             @Override
@@ -552,24 +562,78 @@ public class OpenAICompletion implements LLMCompletion {
 
         try {
             log.info("> Completion | 开始流式调用，模型: {} <", model);
-            ChatCompletionCreateParams params = buildParams(request, true);
+            executeStream(request, consumer, cancelled, closeableRef);
+            log.info("> Completion | 流式调用结束 <");
+        } catch (Exception e) {
+            log.error("> Completion | 流式调用失败: {} <", e.getMessage(), e);
+            throw new OpenSagentLLMException("OpenAI Completion流式调用失败: " + e.getMessage(), e);
+        }
 
-            // OpenAI SDK流式返回
-            com.openai.core.http.StreamResponse<ChatCompletionChunk> streamResponse =
-                    client.chat().completions().createStreaming(params);
+        return token;
+    }
+
+    @Override
+    public CompletionCancelToken streamAsync(CompletionRequest request, Consumer<StreamChunk> consumer, Executor executor) {
+        if (executor == null) {
+            throw new OpenSagentLLMException("Executor不能为空");
+        }
+        AtomicBoolean cancelled = new AtomicBoolean(false);
+        AtomicReference<AutoCloseable> closeableRef = new AtomicReference<>();
+        CompletionCancelToken token = new CompletionCancelToken() {
+            @Override
+            public void cancel() {
+                cancelled.set(true);
+                AutoCloseable c = closeableRef.get();
+                if (c != null) {
+                    try {
+                        c.close();
+                    } catch (Exception ignored) {
+                        // 忽略关闭异常
+                    }
+                }
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return cancelled.get();
+            }
+        };
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                log.info("> Completion | 开始异步流式调用，模型: {} <", model);
+                executeStream(request, consumer, cancelled, closeableRef);
+                log.info("> Completion | 异步流式调用结束 <");
+            } catch (Exception e) {
+                log.error("> Completion | 异步流式调用失败: {} <", e.getMessage(), e);
+                throw new OpenSagentLLMException("OpenAI Completion异步流式调用失败: " + e.getMessage(), e);
+            }
+        }, executor);
+        return token;
+    }
+
+    private void executeStream(CompletionRequest request, Consumer<StreamChunk> consumer,
+                               AtomicBoolean cancelled, AtomicReference<AutoCloseable> closeableRef) {
+        ChatCompletionCreateParams params = buildParams(request);
+
+        try (com.openai.core.http.StreamResponse<ChatCompletionChunk> streamResponse =
+                     client.chat().completions().createStreaming(params)) {
+
+            closeableRef.set(streamResponse);
 
             ChatCompletionAccumulator accumulator = ChatCompletionAccumulator.create();
             StringBuilder textBuilder = new StringBuilder();
             StringBuilder reasoningBuilder = new StringBuilder();
             String finishReason = null;
 
-            for (ChatCompletionChunk chunk : streamResponse) {
+            Iterator<ChatCompletionChunk> iterator = streamResponse.stream().iterator();
+            while (iterator.hasNext()) {
+                ChatCompletionChunk chunk = iterator.next();
                 if (cancelled.get()) {
                     log.warn("> Completion | 流式调用被取消 <");
                     break;
                 }
 
-                // 使用SDK提供的Accumulator进行聚合
                 accumulator.accumulate(chunk);
 
                 ChatCompletionChunk.Choice choice = chunk.choices().isEmpty()
@@ -583,19 +647,16 @@ public class OpenAICompletion implements LLMCompletion {
                     finishReason = choice.finishReason().get().asString();
                 }
 
-                // 处理文本增量
                 String deltaText = extractDeltaText(delta);
                 if (deltaText != null && !deltaText.isEmpty()) {
                     textBuilder.append(deltaText);
                 }
 
-                // 处理推理增量（OpenAI o1系列可能支持）
                 String deltaReasoning = extractDeltaReasoning(delta);
                 if (deltaReasoning != null && !deltaReasoning.isEmpty()) {
                     reasoningBuilder.append(deltaReasoning);
                 }
 
-                // 处理ToolCall增量：从accumulator当前状态获取本次新增/更新的ToolCall
                 List<ToolCall> deltaToolCalls = extractDeltaToolCalls(accumulator, chunk);
 
                 StreamChunk streamChunk = StreamChunk.builder()
@@ -610,9 +671,7 @@ public class OpenAICompletion implements LLMCompletion {
                     consumer.accept(streamChunk);
                 }
 
-                // 流结束
                 if (finishReason != null) {
-                    // 通过accumulator获取完整的聚合结果，提取最终ToolCall列表
                     ChatCompletion accumulated = accumulator.chatCompletion();
                     CompletionResponse finalResponse = mapResponse(accumulated);
                     List<ToolCall> finalToolCalls = finalResponse.getMessage() != null
@@ -632,44 +691,14 @@ public class OpenAICompletion implements LLMCompletion {
                     break;
                 }
             }
-
-            log.info("> Completion | 流式调用结束 <");
-        } catch (Exception e) {
-            log.error("> Completion | 流式调用失败: {} <", e.getMessage(), e);
-            throw new OpenSagentLLMException("OpenAI Completion流式调用失败: " + e.getMessage(), e);
         }
-
-        return token;
-    }
-
-    @Override
-    public CompletionCancelToken streamAsync(CompletionRequest request, Consumer<StreamChunk> consumer, Executor executor) {
-        if (executor == null) {
-            throw new OpenSagentLLMException("Executor不能为空");
-        }
-        AtomicBoolean cancelled = new AtomicBoolean(false);
-        CompletionCancelToken token = new CompletionCancelToken() {
-            @Override
-            public void cancel() {
-                cancelled.set(true);
-            }
-
-            @Override
-            public boolean isCancelled() {
-                return cancelled.get();
-            }
-        };
-
-        CompletableFuture.runAsync(() -> stream(request, consumer), executor);
-        return token;
     }
 
     // ========== 私有辅助方法 ==========
 
-    private ChatCompletionCreateParams buildParams(CompletionRequest request, boolean stream) {
+    private ChatCompletionCreateParams buildParams(CompletionRequest request) {
         ChatCompletionCreateParams.Builder builder = ChatCompletionCreateParams.builder()
-                .model(model)
-                .stream(stream);
+                .model(model);
 
         // 转换消息
         if (request.getMessages() != null) {
@@ -689,7 +718,7 @@ public class OpenAICompletion implements LLMCompletion {
             builder.temperature(request.getTemperature());
         }
         if (request.getMaxTokens() != null) {
-            builder.maxTokens(request.getMaxTokens());
+            builder.maxTokens(request.getMaxTokens().longValue());
         }
 
         return builder.build();
@@ -1018,6 +1047,113 @@ CompletableFuture<CompletionResponse> completeAsync(CompletionRequest request, E
 CompletionCancelToken streamAsync(CompletionRequest request, Consumer<StreamChunk> consumer, Executor executor);
 ```
 
+### 变更 3（2026-04-19）：流式/异步调用中断机制增强，支持调用厂商 SDK 完成底层连接中断
+
+**变更原因：**
+1. 根据 `project_design_llm.md` 架构方案要求：流式和异步调用场景下，中断功能除了系统内中断，还需要调用不同厂商的实现完成中断
+2. 当前 OpenAI 实现仅通过 `AtomicBoolean` 标志位进行系统内中断，无法立即中断底层阻塞的 HTTP 连接
+3. OpenAI Java SDK 的 `StreamResponse` 继承 `AutoCloseable`，支持 `close()` 方法可立即关闭底层网络连接
+4. `streamAsync()` 方法存在缺陷：调用 `stream()` 时丢弃了内部 token，导致外部 `cancel()` 无法传递到流式执行循环
+
+**文件变更：**
+
+| 文件路径 | 变更类型 | 说明 |
+|----------|----------|------|
+| `.../infrastructure/llm/openai/OpenAICompletion.java` | 修改 | 抽取 `executeStream` 私有方法；`stream`/`streamAsync` 共享取消状态与可关闭资源引用；token.cancel 调用 `StreamResponse.close()` |
+
+**关键代码变更：**
+
+```java
+// 修改前：stream 方法中仅系统内中断
+public CompletionCancelToken stream(CompletionRequest request, Consumer<StreamChunk> consumer) {
+    AtomicBoolean cancelled = new AtomicBoolean(false);
+    CompletionCancelToken token = new CompletionCancelToken() {
+        @Override public void cancel() { cancelled.set(true); }
+        @Override public boolean isCancelled() { return cancelled.get(); }
+    };
+    try (StreamResponse<ChatCompletionChunk> streamResponse = client.chat().completions().createStreaming(params)) {
+        ...
+        if (cancelled.get()) { break; }
+        ...
+    }
+    return token;
+}
+
+// 修改后：抽取 executeStream，cancel 时关闭厂商连接
+private void executeStream(CompletionRequest request, Consumer<StreamChunk> consumer,
+                           AtomicBoolean cancelled, AtomicReference<AutoCloseable> closeableRef) {
+    try (StreamResponse<ChatCompletionChunk> streamResponse = client.chat().completions().createStreaming(buildParams(request))) {
+        closeableRef.set(streamResponse);
+        ...
+        if (cancelled.get()) {
+            log.warn("> Completion | 流式调用被取消 <");
+            break;
+        }
+        ...
+    }
+}
+
+public CompletionCancelToken stream(CompletionRequest request, Consumer<StreamChunk> consumer) {
+    AtomicBoolean cancelled = new AtomicBoolean(false);
+    AtomicReference<AutoCloseable> closeableRef = new AtomicReference<>();
+    CompletionCancelToken token = new CompletionCancelToken() {
+        @Override public void cancel() {
+            cancelled.set(true);
+            AutoCloseable c = closeableRef.get();
+            if (c != null) {
+                try { c.close(); } catch (Exception ignored) { }
+            }
+        }
+        @Override public boolean isCancelled() { return cancelled.get(); }
+    };
+    try {
+        executeStream(request, consumer, cancelled, closeableRef);
+    } catch (Exception e) {
+        log.error("> Completion | 流式调用失败: {} <", e.getMessage(), e);
+        throw new OpenSagentLLMException("OpenAI Completion流式调用失败: " + e.getMessage(), e);
+    }
+    return token;
+}
+```
+
+```java
+// 修改前：streamAsync 丢弃内部 token，cancel 无法传递
+public CompletionCancelToken streamAsync(CompletionRequest request, Consumer<StreamChunk> consumer, Executor executor) {
+    AtomicBoolean cancelled = new AtomicBoolean(false);
+    CompletionCancelToken token = new CompletionCancelToken() { ... };
+    CompletableFuture.runAsync(() -> stream(request, consumer), executor);
+    return token;
+}
+
+// 修改后：streamAsync 共享 cancelled 和 closeableRef
+public CompletionCancelToken streamAsync(CompletionRequest request, Consumer<StreamChunk> consumer, Executor executor) {
+    if (executor == null) {
+        throw new OpenSagentLLMException("Executor不能为空");
+    }
+    AtomicBoolean cancelled = new AtomicBoolean(false);
+    AtomicReference<AutoCloseable> closeableRef = new AtomicReference<>();
+    CompletionCancelToken token = new CompletionCancelToken() {
+        @Override public void cancel() {
+            cancelled.set(true);
+            AutoCloseable c = closeableRef.get();
+            if (c != null) {
+                try { c.close(); } catch (Exception ignored) { }
+            }
+        }
+        @Override public boolean isCancelled() { return cancelled.get(); }
+    };
+    CompletableFuture.runAsync(() -> {
+        try {
+            executeStream(request, consumer, cancelled, closeableRef);
+        } catch (Exception e) {
+            log.error("> Completion | 异步流式调用失败: {} <", e.getMessage(), e);
+            throw new OpenSagentLLMException("OpenAI Completion异步流式调用失败: " + e.getMessage(), e);
+        }
+    }, executor);
+    return token;
+}
+```
+
 ## 6. 评审记录
 
 | 评审人 | 时间 | 结论 | 备注 |
@@ -1025,4 +1161,5 @@ CompletionCancelToken streamAsync(CompletionRequest request, Consumer<StreamChun
 | User | 2026-04-14 | 需修改 | 问题1：OpenAI流式聚合应优先使用SDK自带的ChatCompletionAccumulator |
 | User | 2026-04-14 | 需修改 | 问题2：异步执行时，Executor应由调用方传入 |
 | User | 2026-04-14 | 通过 | 方案通过，可以实施代码变更 |
+| User | 2026-04-19 | 通过 | 方案通过，可以实施代码变更 |
 | [待填写] | [待填写] | [通过/需修改] | |

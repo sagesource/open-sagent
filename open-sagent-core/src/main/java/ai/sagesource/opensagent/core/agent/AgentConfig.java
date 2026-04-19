@@ -44,4 +44,23 @@ public class AgentConfig {
      * 最大生成Token数
      */
     private Integer maxTokens;
+
+    /**
+     * 结束工具名称
+     * <p>
+     * 用于ReActAgent模式，当模型调用该名称的工具时，表示任务已完成，终止迭代循环。
+     * 该值会作为Prompt模板中占位符的替换值，提示模型在任务完成时调用此工具。
+     */
+    @Builder.Default
+    private String finishToolName = "react_finish_answer";
+
+    /**
+     * 同一工具调用阈值
+     * <p>
+     * 用于ReActAgent模式，在一次ReAct调用中，如果同一个工具被调用的次数超过该阈值，
+     * 输出Warn级别日志告警，防止模型陷入无限循环或重复调用。
+     * 默认为3次。
+     */
+    @Builder.Default
+    private Integer toolCallThreshold = 3;
 }

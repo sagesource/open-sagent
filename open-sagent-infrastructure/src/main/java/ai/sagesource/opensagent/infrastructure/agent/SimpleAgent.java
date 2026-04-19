@@ -1,6 +1,5 @@
 package ai.sagesource.opensagent.infrastructure.agent;
 
-import ai.sagesource.opensagent.core.agent.Agent;
 import ai.sagesource.opensagent.core.agent.AgentConfig;
 import ai.sagesource.opensagent.core.agent.AgentResponse;
 import ai.sagesource.opensagent.core.agent.exception.OpenSagentAgentException;
@@ -17,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 /**
@@ -38,15 +35,7 @@ import java.util.function.Consumer;
  * @time: 2026/4/16
  */
 @Slf4j
-public class SimpleAgent implements Agent {
-
-    private final String name;
-    private final PromptTemplate promptTemplate;
-    private final PromptRenderContext promptContext;
-    private final Memory memory;
-    private final LLMCompletion completion;
-    private final ToolRegistry toolRegistry;
-    private final AgentConfig config;
+public class SimpleAgent extends AbstractAgent {
 
     public SimpleAgent(String name,
                        PromptTemplate promptTemplate,
@@ -55,13 +44,7 @@ public class SimpleAgent implements Agent {
                        LLMCompletion completion,
                        ToolRegistry toolRegistry,
                        AgentConfig config) {
-        this.name = name;
-        this.promptTemplate = promptTemplate;
-        this.promptContext = promptContext;
-        this.memory = memory;
-        this.completion = completion;
-        this.toolRegistry = toolRegistry;
-        this.config = config != null ? config : AgentConfig.builder().build();
+        super(name, promptTemplate, promptContext, memory, completion, toolRegistry, config);
     }
 
     @Override
@@ -71,16 +54,12 @@ public class SimpleAgent implements Agent {
             throw new OpenSagentAgentException("LLMCompletion未配置");
         }
         try {
-            // 1. 添加用户消息到记忆
             addMessagesToMemory(messages);
-            // 2. 执行记忆压缩
             if (memory != null) {
                 memory.compress();
             }
-            // 3. 调用Completion
             CompletionRequest request = buildRequest(false);
             CompletionResponse response = completion.complete(request);
-            // 4. 处理响应（保存历史、处理工具调用）
             return processResponse(response);
         } catch (OpenSagentAgentException e) {
             throw e;
@@ -88,14 +67,6 @@ public class SimpleAgent implements Agent {
             log.error("> Agent | {} 同步调用失败 <", name, e);
             throw new OpenSagentAgentException("Agent调用失败: " + e.getMessage(), e);
         }
-    }
-
-    @Override
-    public CompletableFuture<AgentResponse> chatAsync(List<UserCompletionMessage> messages, Executor executor) {
-        if (executor == null) {
-            throw new OpenSagentAgentException("Executor不能为空");
-        }
-        return CompletableFuture.supplyAsync(() -> chat(messages), executor);
     }
 
     @Override
@@ -112,83 +83,17 @@ public class SimpleAgent implements Agent {
         return completion.stream(request, consumer);
     }
 
-    @Override
-    public CompletionCancelToken streamAsync(List<UserCompletionMessage> messages, Consumer<StreamChunk> consumer, Executor executor) {
-        if (executor == null) {
-            throw new OpenSagentAgentException("Executor不能为空");
-        }
-        return CompletableFuture.supplyAsync(() -> stream(messages, consumer), executor)
-                .exceptionally(ex -> {
-                    log.error("> Agent | {} 异步流式调用失败 <", name, ex);
-                    return null;
-                }).join();
-    }
-
-    private void addMessagesToMemory(List<UserCompletionMessage> messages) {
-        if (memory != null && messages != null && !messages.isEmpty()) {
-            List<CompletionMessage> completionMessages = new ArrayList<>(messages);
-            memory.addMessages(completionMessages);
-        }
-    }
-
-    private CompletionRequest buildRequest(boolean stream) {
-        List<CompletionMessage> messages = new ArrayList<>();
-
-        // System Prompt
-        if (promptTemplate != null) {
-            String systemText = promptTemplate.render(
-                    promptContext != null ? promptContext : PromptRenderContext.empty());
-            if (systemText != null && !systemText.isEmpty()) {
-                messages.add(SystemCompletionMessage.of(systemText));
-            }
-        }
-
-        // Memory上下文
-        if (memory != null) {
-            // 记忆历史（压缩后的记忆）作为System上下文补充
-            if (!memory.getMemoryItems().isEmpty()) {
-                StringBuilder memoryBuilder = new StringBuilder();
-                memoryBuilder.append("以下是历史对话记忆：\n");
-                memory.getMemoryItems().forEach(item -> {
-                    memoryBuilder.append(item.getContent()).append("\n");
-                });
-                messages.add(SystemCompletionMessage.builder()
-                        .contents(new ArrayList<>(List.of(
-                                TextContent.builder().text(memoryBuilder.toString().trim()).build())))
-                        .build());
-            }
-            // 未压缩对话历史
-            messages.addAll(memory.getUncompressedMessages());
-        }
-
-        CompletionRequest request = CompletionRequest.builder()
-                .messages(messages)
-                .temperature(config.getTemperature())
-                .maxTokens(config.getMaxTokens())
-                .stream(stream)
-                .build();
-
-        // 工具注册
-        if (config.isEnableTools() && toolRegistry != null && !toolRegistry.getAllDefinitions().isEmpty()) {
-            request.setTools(toolRegistry.getAllDefinitions());
-        }
-
-        return request;
-    }
-
     private AgentResponse processResponse(CompletionResponse response) {
         if (response == null || response.getMessage() == null) {
             throw new OpenSagentAgentException("模型响应为空");
         }
 
-        // 保存助手消息到记忆
         if (memory != null) {
             memory.addMessage(response.getMessage());
         }
 
         List<ToolResult> toolResults = new ArrayList<>();
 
-        // 处理工具调用（一轮）
         if (config.isEnableTools() && response.hasToolCalls() && toolRegistry != null) {
             List<ToolCall> toolCalls = response.getMessage().getToolCalls();
             ToolExecutor executor = new ToolExecutor(toolRegistry);
@@ -205,7 +110,6 @@ public class SimpleAgent implements Agent {
                 }
             }
 
-            // 再次调用模型获取最终文本回复
             CompletionRequest finalRequest = buildRequest(false);
             CompletionResponse finalResponse = completion.complete(finalRequest);
             if (finalResponse == null || finalResponse.getMessage() == null) {

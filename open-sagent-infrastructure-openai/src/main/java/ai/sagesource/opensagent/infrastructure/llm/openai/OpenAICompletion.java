@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -72,10 +73,19 @@ public class OpenAICompletion implements LLMCompletion {
     @Override
     public CompletionCancelToken stream(CompletionRequest request, Consumer<StreamChunk> consumer) {
         AtomicBoolean cancelled = new AtomicBoolean(false);
+        AtomicReference<AutoCloseable> closeableRef = new AtomicReference<>();
         CompletionCancelToken token = new CompletionCancelToken() {
             @Override
             public void cancel() {
                 cancelled.set(true);
+                AutoCloseable c = closeableRef.get();
+                if (c != null) {
+                    try {
+                        c.close();
+                    } catch (Exception ignored) {
+                        // 忽略关闭异常
+                    }
+                }
             }
 
             @Override
@@ -86,83 +96,7 @@ public class OpenAICompletion implements LLMCompletion {
 
         try {
             log.info("> Completion | 开始流式调用，模型: {} <", model);
-            ChatCompletionCreateParams params = buildParams(request);
-
-            try (com.openai.core.http.StreamResponse<ChatCompletionChunk> streamResponse =
-                         client.chat().completions().createStreaming(params)) {
-
-                ChatCompletionAccumulator accumulator = ChatCompletionAccumulator.create();
-                StringBuilder textBuilder = new StringBuilder();
-                StringBuilder reasoningBuilder = new StringBuilder();
-                String finishReason = null;
-
-                Iterator<ChatCompletionChunk> iterator = streamResponse.stream().iterator();
-                while (iterator.hasNext()) {
-                    ChatCompletionChunk chunk = iterator.next();
-                    if (cancelled.get()) {
-                        log.warn("> Completion | 流式调用被取消 <");
-                        break;
-                    }
-
-                    accumulator.accumulate(chunk);
-
-                    ChatCompletionChunk.Choice choice = chunk.choices().isEmpty()
-                            ? null : chunk.choices().get(0);
-                    if (choice == null) {
-                        continue;
-                    }
-
-                    ChatCompletionChunk.Choice.Delta delta = choice.delta();
-                    if (choice.finishReason().isPresent()) {
-                        finishReason = choice.finishReason().get().asString();
-                    }
-
-                    String deltaText = extractDeltaText(delta);
-                    if (deltaText != null && !deltaText.isEmpty()) {
-                        textBuilder.append(deltaText);
-                    }
-
-                    String deltaReasoning = extractDeltaReasoning(delta);
-                    if (deltaReasoning != null && !deltaReasoning.isEmpty()) {
-                        reasoningBuilder.append(deltaReasoning);
-                    }
-
-                    List<ToolCall> deltaToolCalls = extractDeltaToolCalls(accumulator, chunk);
-
-                    StreamChunk streamChunk = StreamChunk.builder()
-                            .deltaText(deltaText)
-                            .deltaReasoningText(deltaReasoning)
-                            .deltaToolCalls(deltaToolCalls)
-                            .aggregatedText(textBuilder.toString())
-                            .finishReason(finishReason)
-                            .build();
-
-                    if (streamChunk.hasDelta() || finishReason != null) {
-                        consumer.accept(streamChunk);
-                    }
-
-                    if (finishReason != null) {
-                        ChatCompletion accumulated = accumulator.chatCompletion();
-                        CompletionResponse finalResponse = mapResponse(accumulated);
-                        List<ToolCall> finalToolCalls = finalResponse.getMessage() != null
-                                ? finalResponse.getMessage().getToolCalls() : new ArrayList<>();
-                        if (!finalToolCalls.isEmpty()) {
-                            consumer.accept(StreamChunk.builder()
-                                    .deltaToolCalls(finalToolCalls)
-                                    .aggregatedText(textBuilder.toString())
-                                    .finishReason(finishReason)
-                                    .build());
-                        }
-                        consumer.accept(StreamChunk.builder()
-                                .finished(true)
-                                .finishReason(finishReason)
-                                .aggregatedText(textBuilder.toString())
-                                .build());
-                        break;
-                    }
-                }
-            }
-
+            executeStream(request, consumer, cancelled, closeableRef);
             log.info("> Completion | 流式调用结束 <");
         } catch (Exception e) {
             log.error("> Completion | 流式调用失败: {} <", e.getMessage(), e);
@@ -178,10 +112,19 @@ public class OpenAICompletion implements LLMCompletion {
             throw new OpenSagentLLMException("Executor不能为空");
         }
         AtomicBoolean cancelled = new AtomicBoolean(false);
+        AtomicReference<AutoCloseable> closeableRef = new AtomicReference<>();
         CompletionCancelToken token = new CompletionCancelToken() {
             @Override
             public void cancel() {
                 cancelled.set(true);
+                AutoCloseable c = closeableRef.get();
+                if (c != null) {
+                    try {
+                        c.close();
+                    } catch (Exception ignored) {
+                        // 忽略关闭异常
+                    }
+                }
             }
 
             @Override
@@ -190,8 +133,99 @@ public class OpenAICompletion implements LLMCompletion {
             }
         };
 
-        CompletableFuture.runAsync(() -> stream(request, consumer), executor);
+        CompletableFuture.runAsync(() -> {
+            try {
+                log.info("> Completion | 开始异步流式调用，模型: {} <", model);
+                executeStream(request, consumer, cancelled, closeableRef);
+                log.info("> Completion | 异步流式调用结束 <");
+            } catch (Exception e) {
+                log.error("> Completion | 异步流式调用失败: {} <", e.getMessage(), e);
+                throw new OpenSagentLLMException("OpenAI Completion异步流式调用失败: " + e.getMessage(), e);
+            }
+        }, executor);
         return token;
+    }
+
+    private void executeStream(CompletionRequest request, Consumer<StreamChunk> consumer,
+                               AtomicBoolean cancelled, AtomicReference<AutoCloseable> closeableRef) {
+        ChatCompletionCreateParams params = buildParams(request);
+
+        try (com.openai.core.http.StreamResponse<ChatCompletionChunk> streamResponse =
+                     client.chat().completions().createStreaming(params)) {
+
+            closeableRef.set(streamResponse);
+
+            ChatCompletionAccumulator accumulator = ChatCompletionAccumulator.create();
+            StringBuilder textBuilder = new StringBuilder();
+            StringBuilder reasoningBuilder = new StringBuilder();
+            String finishReason = null;
+
+            Iterator<ChatCompletionChunk> iterator = streamResponse.stream().iterator();
+            while (iterator.hasNext()) {
+                ChatCompletionChunk chunk = iterator.next();
+                if (cancelled.get()) {
+                    log.warn("> Completion | 流式调用被取消 <");
+                    break;
+                }
+
+                accumulator.accumulate(chunk);
+
+                ChatCompletionChunk.Choice choice = chunk.choices().isEmpty()
+                        ? null : chunk.choices().get(0);
+                if (choice == null) {
+                    continue;
+                }
+
+                ChatCompletionChunk.Choice.Delta delta = choice.delta();
+                if (choice.finishReason().isPresent()) {
+                    finishReason = choice.finishReason().get().asString();
+                }
+
+                String deltaText = extractDeltaText(delta);
+                if (deltaText != null && !deltaText.isEmpty()) {
+                    textBuilder.append(deltaText);
+                }
+
+                String deltaReasoning = extractDeltaReasoning(delta);
+                if (deltaReasoning != null && !deltaReasoning.isEmpty()) {
+                    reasoningBuilder.append(deltaReasoning);
+                }
+
+                List<ToolCall> deltaToolCalls = extractDeltaToolCalls(accumulator, chunk);
+
+                StreamChunk streamChunk = StreamChunk.builder()
+                        .deltaText(deltaText)
+                        .deltaReasoningText(deltaReasoning)
+                        .deltaToolCalls(deltaToolCalls)
+                        .aggregatedText(textBuilder.toString())
+                        .finishReason(finishReason)
+                        .build();
+
+                if (streamChunk.hasDelta() || finishReason != null) {
+                    consumer.accept(streamChunk);
+                }
+
+                if (finishReason != null) {
+                    ChatCompletion accumulated = accumulator.chatCompletion();
+                    CompletionResponse finalResponse = mapResponse(accumulated);
+                    List<ToolCall> finalToolCalls = finalResponse.getMessage() != null
+                            ? finalResponse.getMessage().getToolCalls() : new ArrayList<>();
+                    if (!finalToolCalls.isEmpty()) {
+                        consumer.accept(StreamChunk.builder()
+                                .deltaToolCalls(finalToolCalls)
+                                .aggregatedText(textBuilder.toString())
+                                .finishReason(finishReason)
+                                .build());
+                    }
+                    consumer.accept(StreamChunk.builder()
+                            .finished(true)
+                            .finishReason(finishReason)
+                            .aggregatedText(textBuilder.toString())
+                            .build());
+                    break;
+                }
+            }
+        }
     }
 
     // ========== 私有辅助方法 ==========

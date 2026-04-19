@@ -17,7 +17,7 @@
 |--------------------------------|--------------------------------------------------|-----------------------------------|
 | project-system-infrastructure  | infrastructure/project_system_infrastructure.md  | 项目系统架构说明：包括工程模块架构                 |
 | project-design-llm             | infrastructure/project_design_llm.md             | 项目系统设计方案，LLM相关                    |
-| project-design-agent           | infrastructure/project_design_agent.md           | 项目系统设计方案，Agent、Memory、Prompt相关    |
+| project-design-reactagent      | infrastructure/project_design_reactagent.md      | 项目系统设计方案，ReActAgent相关             |
 | project-design-tools-functions | infrastructure/project_design_tools_functions.md | Agent TOOLS开发方案，每一个Agent的Tool实现设计 |
 
 ## 方案类PLANS
@@ -30,9 +30,10 @@
 | 004  | plan/004-LLM模块-Completion设计方案.md          | LLM对话补全模块设计方案                                 |
 | 005  | plan/005-Agent模块-Prompt设计方案.md            | Agent-Prompt模块设计方案                            |
 | 006  | plan/006-LLM厂商模块拆分-OpenAI基础设施层独立模块设计方案.md | LLM厂商模块拆分，将OpenAI实现独立为infrastructure-openai模块 |
-| 007  | plan/007-Agent模块-异常处理方案.md                | Agent异常处理方案                                   |
+| 007  | plan/007-Agent模块-异常包重构.md                 | Agent异常包重构设计方案                                |
 | 008  | plan/008-Agent模块-Memory设计方案.md            | Agent-Memory模块设计方案                            |
 | 009  | plan/009-Agent模块-Agent设计方案.md             | Agent核心模块设计方案                               |
+| 010  | plan/010-Agent模块-ReActAgent设计方案.md        | ReActAgent多轮推理Agent设计方案                      |
 
 ## 引用类SKILLS
 
