@@ -17,6 +17,7 @@
 |--------------------------------|--------------------------------------------------|-----------------------------------|
 | project-system-infrastructure  | infrastructure/project_system_infrastructure.md  | 项目系统架构说明：包括工程模块架构                 |
 | project-design-llm             | infrastructure/project_design_llm.md             | 项目系统设计方案，LLM相关                    |
+| project-design-agent           | infrastructure/project_design_agent.md           | 项目系统设计方案，Agent核心相关              |
 | project-design-reactagent      | infrastructure/project_design_reactagent.md      | 项目系统设计方案，ReActAgent相关             |
 | project-design-tools-functions | infrastructure/project_design_tools_functions.md | Agent TOOLS开发方案，每一个Agent的Tool实现设计 |
 
@@ -35,6 +36,7 @@
 | 009  | plan/009-Agent模块-Agent设计方案.md             | Agent核心模块设计方案                               |
 | 010  | plan/010-Agent模块-ReActAgent设计方案.md        | ReActAgent多轮推理Agent设计方案                      |
 | 011  | plan/011-Agent模块-MultipleSQLLiteMemory设计方案.md | Agent-MultipleSQLLiteMemory持久化内存设计方案        |
+| 012  | plan/012-Agent模块-Memory压缩判断能力设计方案.md  | Agent-Memory模块新增 shouldCompress 压缩判断能力设计方案 |
 
 ## 引用类SKILLS
 

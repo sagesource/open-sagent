@@ -287,6 +287,54 @@ class MultipleSQLLiteMemoryTest {
         assertEquals(first.getMemoryItem().getMemoryItemId(), second.getMemoryItem().getLastMemoryItemId());
     }
 
+    // ===== shouldCompress 相关测试 =====
+
+    @Test
+    @DisplayName("shouldCompress-空记忆返回false")
+    void testShouldCompressWhenEmpty() {
+        MultipleSQLLiteMemory memory = createMemory();
+        assertFalse(memory.shouldCompress());
+    }
+
+    @Test
+    @DisplayName("shouldCompress-未超过窗口阈值返回false")
+    void testShouldCompressWhenBelowThreshold() {
+        MultipleSQLLiteMemory memory = new MultipleSQLLiteMemory(
+                UUID.randomUUID().toString(), TEST_DB, 10, null, null);
+        memory.addMessage(UserCompletionMessage.of("msg1"));
+        memory.addMessage(UserCompletionMessage.of("msg2"));
+
+        assertFalse(memory.shouldCompress());
+    }
+
+    @Test
+    @DisplayName("shouldCompress-超过窗口阈值返回true")
+    void testShouldCompressWhenAboveThreshold() {
+        MultipleSQLLiteMemory memory = createMemory();
+        memory.addMessage(UserCompletionMessage.of("msg1"));
+        memory.addMessage(UserCompletionMessage.of("msg2"));
+        memory.addMessage(UserCompletionMessage.of("msg3"));
+        memory.addMessage(UserCompletionMessage.of("msg4"));
+        memory.addMessage(UserCompletionMessage.of("msg5"));
+
+        assertTrue(memory.shouldCompress());
+    }
+
+    @Test
+    @DisplayName("shouldCompress-压缩后再次判断返回false")
+    void testShouldCompressAfterCompress() {
+        MultipleSQLLiteMemory memory = createMemory();
+        memory.addMessage(UserCompletionMessage.of("msg1"));
+        memory.addMessage(UserCompletionMessage.of("msg2"));
+        memory.addMessage(UserCompletionMessage.of("msg3"));
+        memory.addMessage(UserCompletionMessage.of("msg4"));
+        memory.addMessage(UserCompletionMessage.of("msg5"));
+
+        assertTrue(memory.shouldCompress());
+        memory.compress();
+        assertFalse(memory.shouldCompress());
+    }
+
     private int countOccurrences(String text, String sub) {
         int count = 0;
         int idx = 0;

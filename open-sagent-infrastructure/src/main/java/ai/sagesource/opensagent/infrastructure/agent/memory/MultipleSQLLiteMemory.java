@@ -246,18 +246,25 @@ public class MultipleSQLLiteMemory implements Memory {
     }
 
     @Override
-    public CompressionResult compress() {
+    public boolean shouldCompress() {
         List<CompletionMessage> uncompressed = getUncompressedMessages();
         if (uncompressed.isEmpty()) {
-            log.warn("> Memory | session: {} 无可压缩的对话历史 <", sessionId);
-            return CompressionResult.skipped("无可压缩的对话历史");
+            return false;
         }
-
         int compressCount = Math.max(0, uncompressed.size() - windowSize);
-        if (compressCount == 0) {
+        return compressCount > 0;
+    }
+
+    @Override
+    public CompressionResult compress() {
+        if (!shouldCompress()) {
             log.warn("> Memory | session: {} 未压缩消息数量未超过滑动窗口阈值 {}，无需压缩 <", sessionId, windowSize);
             return CompressionResult.skipped("未压缩消息数量未超过滑动窗口阈值，无需压缩");
         }
+
+        List<CompletionMessage> uncompressed = getUncompressedMessages();
+
+        int compressCount = Math.max(0, uncompressed.size() - windowSize);
 
         List<CompletionMessage> toCompress = new ArrayList<>(uncompressed.subList(0, compressCount));
 

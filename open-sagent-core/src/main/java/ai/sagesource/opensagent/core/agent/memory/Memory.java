@@ -50,6 +50,16 @@ public interface Memory {
     List<MemoryItem> getMemoryItems();
 
     /**
+     * 判断当前是否需要进行记忆压缩
+     * <p>
+     * 调用方可在执行 {@link #compress()} 之前调用此方法，
+     * 独立判断当前记忆状态是否满足压缩条件。
+     *
+     * @return true 表示需要进行压缩，false 表示暂无需压缩
+     */
+    boolean shouldCompress();
+
+    /**
      * 执行记忆压缩并保存
      * <p>
      * 使用最新的记忆历史 + 未压缩对话历史 进行记忆压缩，压缩完成后清空未压缩对话历史

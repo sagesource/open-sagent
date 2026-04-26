@@ -222,6 +222,53 @@ class SimpleMemoryTest {
         assertEquals(1, memory.getUncompressedMessages().size());
     }
 
+    // ===== shouldCompress 相关测试 =====
+
+    @Test
+    @DisplayName("shouldCompress-空记忆返回false")
+    void testShouldCompressWhenEmpty() {
+        SimpleMemory memory = new SimpleMemory();
+        assertFalse(memory.shouldCompress());
+    }
+
+    @Test
+    @DisplayName("shouldCompress-未超过窗口阈值返回false")
+    void testShouldCompressWhenBelowThreshold() {
+        SimpleMemory memory = new SimpleMemory(5);
+        memory.addMessage(UserCompletionMessage.of("msg1"));
+        memory.addMessage(UserCompletionMessage.of("msg2"));
+
+        assertFalse(memory.shouldCompress());
+    }
+
+    @Test
+    @DisplayName("shouldCompress-超过窗口阈值返回true")
+    void testShouldCompressWhenAboveThreshold() {
+        SimpleMemory memory = new SimpleMemory(3);
+        memory.addMessage(UserCompletionMessage.of("msg1"));
+        memory.addMessage(UserCompletionMessage.of("msg2"));
+        memory.addMessage(UserCompletionMessage.of("msg3"));
+        memory.addMessage(UserCompletionMessage.of("msg4"));
+        memory.addMessage(UserCompletionMessage.of("msg5"));
+
+        assertTrue(memory.shouldCompress());
+    }
+
+    @Test
+    @DisplayName("shouldCompress-压缩后再次判断返回false")
+    void testShouldCompressAfterCompress() {
+        SimpleMemory memory = new SimpleMemory(3);
+        memory.addMessage(UserCompletionMessage.of("msg1"));
+        memory.addMessage(UserCompletionMessage.of("msg2"));
+        memory.addMessage(UserCompletionMessage.of("msg3"));
+        memory.addMessage(UserCompletionMessage.of("msg4"));
+        memory.addMessage(UserCompletionMessage.of("msg5"));
+
+        assertTrue(memory.shouldCompress());
+        memory.compress();
+        assertFalse(memory.shouldCompress());
+    }
+
     private int countOccurrences(String text, String sub) {
         int count = 0;
         int idx = 0;

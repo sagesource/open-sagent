@@ -99,6 +99,17 @@ public class SimpleMemory implements Memory {
     }
 
     @Override
+    public boolean shouldCompress() {
+        synchronized (this) {
+            if (uncompressedMessages.isEmpty()) {
+                return false;
+            }
+            int compressCount = Math.max(0, uncompressedMessages.size() - windowSize);
+            return compressCount > 0;
+        }
+    }
+
+    @Override
     public CompressionResult compress() {
         synchronized (this) {
             if (uncompressedMessages.isEmpty()) {
@@ -106,11 +117,12 @@ public class SimpleMemory implements Memory {
                 return CompressionResult.skipped("无可压缩的对话历史");
             }
 
-            int compressCount = Math.max(0, uncompressedMessages.size() - windowSize);
-            if (compressCount == 0) {
+            if (!shouldCompress()) {
                 log.warn("> Memory | 未压缩消息数量未超过滑动窗口阈值 {}，无需压缩 <", windowSize);
                 return CompressionResult.skipped("未压缩消息数量未超过滑动窗口阈值，无需压缩");
             }
+
+            int compressCount = Math.max(0, uncompressedMessages.size() - windowSize);
 
             List<CompletionMessage> toCompress = new ArrayList<>(uncompressedMessages.subList(0, compressCount));
 
