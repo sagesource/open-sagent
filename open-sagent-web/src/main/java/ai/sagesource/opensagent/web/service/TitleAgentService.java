@@ -27,7 +27,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TitleAgentService {
 
-    private final LLMCompletion llmCompletion;
+    @Qualifier("titleCompletion")
+    private final LLMCompletion titleCompletion;
 
     @Qualifier("titleAgentConfig")
     private final AgentConfig titleAgentConfig;
@@ -68,7 +69,7 @@ public class TitleAgentService {
                     },
                     null,
                     memory,
-                    llmCompletion,
+                    titleCompletion,
                     null,
                     titleAgentConfig
             );

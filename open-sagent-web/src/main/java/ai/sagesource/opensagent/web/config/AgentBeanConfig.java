@@ -14,6 +14,8 @@ import org.springframework.context.annotation.Configuration;
  * Agent初始化配置
  * <p>
  * 从Spring配置文件（支持DotEnv覆盖）初始化LLMClient和Agent配置
+ * <p>
+ * 每个Agent使用独立的LLMClient和LLMCompletion，支持不同模型和API密钥配置
  *
  * @author: sage.xue
  * @time: 2026/4/26
@@ -22,20 +24,38 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AgentBeanConfig {
 
-    @Value("${sagent.llm.api-key}")
-    private String apiKey;
+    // ========== 全局默认LLM配置（作为各Agent的fallback默认值） ==========
+    @Value("${sagent.llm.api-key:}")
+    private String defaultApiKey;
 
     @Value("${sagent.llm.base-url:https://api.openai.com}")
-    private String baseUrl;
+    private String defaultBaseUrl;
 
-    @Value("${sagent.llm.model:gpt-4o-mini}")
-    private String model;
+    // ========== SimpleAgent LLM配置 ==========
+    @Value("${sagent.agent.simple.api-key:${sagent.llm.api-key:}}")
+    private String simpleApiKey;
+
+    @Value("${sagent.agent.simple.base-url:${sagent.llm.base-url:https://api.openai.com}}")
+    private String simpleBaseUrl;
+
+    @Value("${sagent.agent.simple.model:gpt-4o-mini}")
+    private String simpleModel;
 
     @Value("${sagent.agent.simple.temperature:0.7}")
     private Double simpleTemperature;
 
     @Value("${sagent.agent.simple.max-tokens:2048}")
     private Integer simpleMaxTokens;
+
+    // ========== ReActAgent(Smart) LLM配置 ==========
+    @Value("${sagent.agent.smart.api-key:${sagent.llm.api-key:}}")
+    private String smartApiKey;
+
+    @Value("${sagent.agent.smart.base-url:${sagent.llm.base-url:https://api.openai.com}}")
+    private String smartBaseUrl;
+
+    @Value("${sagent.agent.smart.model:gpt-4o-mini}")
+    private String smartModel;
 
     @Value("${sagent.agent.smart.temperature:0.7}")
     private Double smartTemperature;
@@ -46,24 +66,49 @@ public class AgentBeanConfig {
     @Value("${sagent.agent.smart.max-iterations:10}")
     private Integer smartMaxIterations;
 
-    @Value("${sagent.title-agent.temperature:0.5}")
+    // ========== TitleAgent LLM配置 ==========
+    @Value("${sagent.agent.title.api-key:${sagent.llm.api-key:}}")
+    private String titleApiKey;
+
+    @Value("${sagent.agent.title.base-url:${sagent.llm.base-url:https://api.openai.com}}")
+    private String titleBaseUrl;
+
+    @Value("${sagent.agent.title.model:gpt-4o-mini}")
+    private String titleModel;
+
+    @Value("${sagent.agent.title.temperature:0.5}")
     private Double titleTemperature;
 
-    @Value("${sagent.title-agent.max-tokens:100}")
+    @Value("${sagent.agent.title.max-tokens:100}")
     private Integer titleMaxTokens;
 
-    @Bean
-    public LLMClient llmClient() {
+    private LLMClient createLLMClient(String apiKey, String baseUrl, String model) {
+        String actualApiKey = (apiKey != null && !apiKey.isEmpty()) ? apiKey : defaultApiKey;
+        String actualBaseUrl = (baseUrl != null && !baseUrl.isEmpty()) ? baseUrl : defaultBaseUrl;
         LLMClientConfig config = LLMClientConfig.builder()
-                .apiKey(apiKey)
-                .baseUrl(baseUrl)
+                .apiKey(actualApiKey)
+                .baseUrl(actualBaseUrl)
+                .model(model)
                 .build();
         return new OpenAILLMClient(config);
     }
 
     @Bean
-    public LLMCompletion llmCompletion(LLMClient llmClient) {
-        return OpenAICompletionFactory.createCompletion(llmClient);
+    public LLMCompletion simpleCompletion() {
+        LLMClient client = createLLMClient(simpleApiKey, simpleBaseUrl, simpleModel);
+        return OpenAICompletionFactory.createCompletion(client);
+    }
+
+    @Bean
+    public LLMCompletion smartCompletion() {
+        LLMClient client = createLLMClient(smartApiKey, smartBaseUrl, smartModel);
+        return OpenAICompletionFactory.createCompletion(client);
+    }
+
+    @Bean
+    public LLMCompletion titleCompletion() {
+        LLMClient client = createLLMClient(titleApiKey, titleBaseUrl, titleModel);
+        return OpenAICompletionFactory.createCompletion(client);
     }
 
     @Bean

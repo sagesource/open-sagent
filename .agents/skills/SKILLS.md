@@ -39,6 +39,7 @@
 | 011  | plan/011-Agent模块-MultipleSQLLiteMemory设计方案.md | Agent-MultipleSQLLiteMemory持久化内存设计方案        |
 | 012  | plan/012-Agent模块-Memory压缩判断能力设计方案.md  | Agent-Memory模块新增 shouldCompress 压缩判断能力设计方案 |
 | 013  | plan/013-Web模块-设计方案.md                      | Web模块完整实现方案（用户系统、对话管理、SSE流式对话、前端） |
+| 014  | plan/014-数据库初始化SQL与SQLite数据库创建SKILL设计方案.md | 数据库初始化SQL与SQLite数据库创建SKILL设计方案 |
 
 ## 引用类SKILLS
 

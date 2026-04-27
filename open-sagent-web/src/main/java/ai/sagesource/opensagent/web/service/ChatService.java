@@ -35,7 +35,12 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final LLMCompletion llmCompletion;
+    @Qualifier("simpleCompletion")
+    private final LLMCompletion simpleCompletion;
+
+    @Qualifier("smartCompletion")
+    private final LLMCompletion smartCompletion;
+
     private final ConversationService conversationService;
     private final TitleAgentService titleAgentService;
 
@@ -84,11 +89,12 @@ public class ChatService {
             needTitle = true;
         }
 
+        LLMCompletion memoryCompletion = "smart".equals(agentVersion) ? smartCompletion : simpleCompletion;
         Memory memory = new MultipleSQLLiteMemory(
                 sessionId,
                 "./memory.db",
                 50,
-                llmCompletion,
+                memoryCompletion,
                 null
         );
 
@@ -180,7 +186,7 @@ public class ChatService {
                     DEFAULT_PROMPT,
                     null,
                     memory,
-                    llmCompletion,
+                    smartCompletion,
                     null,
                     smartAgentConfig
             );
@@ -190,7 +196,7 @@ public class ChatService {
                 DEFAULT_PROMPT,
                 null,
                 memory,
-                llmCompletion,
+                simpleCompletion,
                 null,
                 simpleAgentConfig
         );

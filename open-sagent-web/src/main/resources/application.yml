@@ -11,7 +11,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
@@ -20,26 +20,34 @@ spring:
 
 # Sagent Agent配置
 sagent:
-  # LLM配置
+  # 全局默认LLM配置（作为各Agent的fallback默认值）
   llm:
     api-key: ${OPENAI_API_KEY:}
     base-url: ${OPENAI_BASE_URL:https://api.openai.com}
-    model: ${OPENAI_MODEL:gpt-4o-mini}
-  # Agent配置
+
+  # Agent配置（每个Agent可独立配置LLM参数）
   agent:
-    # SimpleAgent配置
     simple:
+      model: ${SIMPLE_AGENT_MODEL:gpt-4o-mini}
+      api-key: ${SIMPLE_AGENT_API_KEY:}
+      base-url: ${SIMPLE_AGENT_BASE_URL:}
       temperature: ${SIMPLE_AGENT_TEMPERATURE:0.7}
       max-tokens: ${SIMPLE_AGENT_MAX_TOKENS:2048}
-    # ReActAgent配置
+
     smart:
+      model: ${SMART_AGENT_MODEL:gpt-4o-mini}
+      api-key: ${SMART_AGENT_API_KEY:}
+      base-url: ${SMART_AGENT_BASE_URL:}
       temperature: ${SMART_AGENT_TEMPERATURE:0.7}
       max-tokens: ${SMART_AGENT_MAX_TOKENS:4096}
       max-iterations: ${SMART_AGENT_MAX_ITERATIONS:10}
-  # 标题生成Agent配置
-  title-agent:
-    temperature: ${TITLE_AGENT_TEMPERATURE:0.5}
-    max-tokens: ${TITLE_AGENT_MAX_TOKENS:100}
+
+    title:
+      model: ${TITLE_AGENT_MODEL:gpt-4o-mini}
+      api-key: ${TITLE_AGENT_API_KEY:}
+      base-url: ${TITLE_AGENT_BASE_URL:}
+      temperature: ${TITLE_AGENT_TEMPERATURE:0.5}
+      max-tokens: ${TITLE_AGENT_MAX_TOKENS:100}
   # JWT配置
   jwt:
     secret: ${JWT_SECRET:open-sagent-default-secret-key-2026}
