@@ -27,3 +27,4 @@ replay_pid*
 .flattened-pom.xml
 target
 .env
+node_modules
