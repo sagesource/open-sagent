@@ -13,7 +13,8 @@ description: 技术栈列表、编码规范、模块依赖规范
     - Lombok 1.18.42
     - Fastjson2 2.0.60
     - dotenv-java 3.2.0 (environment configuration)
-    - SLF4J 2.0.17 (logging)
+    - SLF4J 2.0.17 (logging facade)
+    - Logback 1.5.6 (logging implementation, Spring Boot default)
 
 ## 编码规范
 
@@ -62,6 +63,36 @@ public interface Test {
 - 单元测试中需要获取的敏感配置(例如API私钥等)，使用DotEnv实现；DotEnv的使用封装为工具
 - 单元测试输出在各个模块的src/test包下，包名和需要单测类的包名一致
 
+### 日志配置规范
+
+- **日志实现**: 使用Logback（Spring Boot默认），通过`logback-spring.xml`配置
+- **输出方式**: 统一使用CONSOLE输出，生产环境由容器采集标准输出
+- **配置文件**: 每个Spring Boot模块在`src/main/resources/logback-spring.xml`中定义日志配置
+- **统一格式**: `%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n`
+- **编码**: 统一使用UTF-8
+
+#### logback-spring.xml模板
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <logger name="ai.sagesource.opensagent" level="INFO" />
+    <logger name="org.springframework.web" level="WARN" />
+    <logger name="org.hibernate" level="WARN" />
+</configuration>
+```
+
 ### 代码日志规范
 
 - 异常日志使用ERROR级别
@@ -75,6 +106,13 @@ public interface Test {
 - 子模块依赖其他子模块直接从根pom中继承
 - 模块间不允许互相依赖
 - 如果依赖的模块已经包含的依赖，不需要再次引用
+
+## Maven依赖版本管理规范
+
+- **所有第三方依赖版本号必须在根pom.xml的`<properties>`中统一定义**，使用`<artifactId>.version`格式的命名规范
+- **所有第三方依赖必须在根pom.xml的`<dependencyManagement>`中进行版本锁定**
+- **子模块pom.xml中引用依赖时，禁止指定`<version>`标签**，版本由根pom.xml的dependencyManagement统一管理
+- Spring Boot BOM已管理的依赖（如spring-boot-starter-web、spring-boot-starter-data-jpa等），可直接引用，无需在dependencyManagement中重复声明
 
 ## Example示例代码生成规范
 

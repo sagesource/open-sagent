@@ -76,8 +76,7 @@ public class MultipleSQLLiteMemory implements Memory {
         this.windowSize = windowSize > 0 ? windowSize : DEFAULT_WINDOW_SIZE;
         this.completion = completion;
         this.fallbackStrategy = fallbackStrategy;
-        initDatabase();
-        ensureSession();
+        // 表结构和 session 记录由外部预先初始化，详见 scripts/init-schema.sql
     }
 
     /**
@@ -85,61 +84,6 @@ public class MultipleSQLLiteMemory implements Memory {
      */
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection("jdbc:sqlite:" + dbPath);
-    }
-
-    /**
-     * 初始化数据库表结构
-     */
-    private void initDatabase() {
-        String sqlSessions = "CREATE TABLE IF NOT EXISTS sessions (" +
-                "session_id TEXT PRIMARY KEY, " +
-                "window_size INTEGER DEFAULT 50, " +
-                "created_at BIGINT, " +
-                "updated_at BIGINT)";
-
-        String sqlMessages = "CREATE TABLE IF NOT EXISTS messages (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "session_id TEXT NOT NULL, " +
-                "message_id TEXT, " +
-                "role TEXT NOT NULL, " +
-                "content_json TEXT NOT NULL, " +
-                "sequence INTEGER NOT NULL, " +
-                "is_uncompressed INTEGER DEFAULT 1, " +
-                "created_at BIGINT)";
-
-        String sqlMemoryItems = "CREATE TABLE IF NOT EXISTS memory_items (" +
-                "memory_item_id TEXT PRIMARY KEY, " +
-                "session_id TEXT NOT NULL, " +
-                "content TEXT NOT NULL, " +
-                "last_message_id TEXT, " +
-                "last_memory_item_id TEXT, " +
-                "timestamp BIGINT)";
-
-        try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute(sqlSessions);
-            stmt.execute(sqlMessages);
-            stmt.execute(sqlMemoryItems);
-            log.debug("> Memory | SQLite 数据库初始化完成, dbPath: {} <", dbPath);
-        } catch (SQLException e) {
-            throw new RuntimeException("初始化 SQLite 数据库失败: " + dbPath, e);
-        }
-    }
-
-    /**
-     * 确保当前 session 记录存在于 sessions 表
-     */
-    private void ensureSession() {
-        String sql = "INSERT OR IGNORE INTO sessions (session_id, window_size, created_at, updated_at) VALUES (?, ?, ?, ?)";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, sessionId);
-            ps.setInt(2, windowSize);
-            ps.setLong(3, System.currentTimeMillis());
-            ps.setLong(4, System.currentTimeMillis());
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("创建会话记录失败, sessionId: " + sessionId, e);
-        }
     }
 
     @Override

@@ -20,6 +20,7 @@
 | project-design-agent           | infrastructure/project_design_agent.md           | 项目系统设计方案，Agent核心相关              |
 | project-design-reactagent      | infrastructure/project_design_reactagent.md      | 项目系统设计方案，ReActAgent相关             |
 | project-design-tools-functions | infrastructure/project_design_tools_functions.md | Agent TOOLS开发方案，每一个Agent的Tool实现设计 |
+| project-design-web             | infrastructure/project_design_web.md             | Agent Web模块实现                                |
 
 ## 方案类PLANS
 
@@ -37,6 +38,7 @@
 | 010  | plan/010-Agent模块-ReActAgent设计方案.md        | ReActAgent多轮推理Agent设计方案                      |
 | 011  | plan/011-Agent模块-MultipleSQLLiteMemory设计方案.md | Agent-MultipleSQLLiteMemory持久化内存设计方案        |
 | 012  | plan/012-Agent模块-Memory压缩判断能力设计方案.md  | Agent-Memory模块新增 shouldCompress 压缩判断能力设计方案 |
+| 013  | plan/013-Web模块-设计方案.md                      | Web模块完整实现方案（用户系统、对话管理、SSE流式对话、前端） |
 
 ## 引用类SKILLS
 
@@ -44,6 +46,9 @@
 |--------------------------|----------------------------------------|--------------------|
 | project-exception-system | references/project_exception_system.md | 项目异常体系说明           |
 | llm-tool-definition      | references/llm_tool_definition.md      | 如何定义一个Tool（基于注解方式） |
+| agent-action-markers     | references/agent_action_markers.md     | Agent流式输出AGENT_ACTION[*]动作标记规范 |
+| web-backend-api          | references/web_backend_api.md          | Web模块后端REST API接口规范（认证、对话管理、SSE流式对话） |
+| sqlite-database-init     | references/sqlite-database-init.md     | SQLite数据库预创建与初始化规范（工程运行前预先建表） |
 
 ---
 

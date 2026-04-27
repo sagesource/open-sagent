@@ -1,0 +1,45 @@
+package ai.sagesource.opensagent.web.security;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+/**
+ * JWT登录态拦截器
+ *
+ * @author: sage.xue
+ * @time: 2026/4/26
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class JwtInterceptor implements HandlerInterceptor {
+
+    private final JwtUtil jwtUtil;
+
+    public static final String HEADER_AUTH = "Authorization";
+    public static final String ATTR_USER_ID = "userId";
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        String token = extractToken(request);
+        if (token == null || !jwtUtil.validateToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return false;
+        }
+        Long userId = jwtUtil.getUserId(token);
+        request.setAttribute(ATTR_USER_ID, userId);
+        return true;
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String bearer = request.getHeader(HEADER_AUTH);
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
+        }
+        return null;
+    }
+}
