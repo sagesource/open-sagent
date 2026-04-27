@@ -33,6 +33,10 @@ sagent:
       base-url: ${SIMPLE_AGENT_BASE_URL:}
       temperature: ${SIMPLE_AGENT_TEMPERATURE:0.7}
       max-tokens: ${SIMPLE_AGENT_MAX_TOKENS:2048}
+      # Prompt配置
+      prompt-path: ${SIMPLE_PROMPT_PATH:prompts/simple-agent.txt}
+      prompt-vars:
+        role: ${SIMPLE_PROMPT_ROLE:AI助手}
 
     smart:
       model: ${SMART_AGENT_MODEL:gpt-4o-mini}
@@ -41,6 +45,10 @@ sagent:
       temperature: ${SMART_AGENT_TEMPERATURE:0.7}
       max-tokens: ${SMART_AGENT_MAX_TOKENS:4096}
       max-iterations: ${SMART_AGENT_MAX_ITERATIONS:10}
+      # Prompt配置
+      prompt-path: ${SMART_PROMPT_PATH:prompts/smart-agent.txt}
+      prompt-vars:
+        role: ${SMART_PROMPT_ROLE:智能AI助手}
 
     title:
       model: ${TITLE_AGENT_MODEL:gpt-4o-mini}
@@ -48,6 +56,10 @@ sagent:
       base-url: ${TITLE_AGENT_BASE_URL:}
       temperature: ${TITLE_AGENT_TEMPERATURE:0.5}
       max-tokens: ${TITLE_AGENT_MAX_TOKENS:100}
+      # Prompt配置
+      prompt-path: ${TITLE_PROMPT_PATH:prompts/title-agent.txt}
+      prompt-vars:
+        max-length: ${TITLE_PROMPT_MAX_LENGTH:10}
   # JWT配置
   jwt:
     secret: ${JWT_SECRET:open-sagent-default-secret-key-2026}

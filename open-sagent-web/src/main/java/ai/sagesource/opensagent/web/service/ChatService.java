@@ -3,7 +3,6 @@ package ai.sagesource.opensagent.web.service;
 import ai.sagesource.opensagent.core.agent.Agent;
 import ai.sagesource.opensagent.core.agent.AgentConfig;
 import ai.sagesource.opensagent.core.agent.memory.Memory;
-import ai.sagesource.opensagent.core.agent.prompt.PromptRenderContext;
 import ai.sagesource.opensagent.core.agent.prompt.PromptTemplate;
 import ai.sagesource.opensagent.core.llm.completion.CompletionCancelToken;
 import ai.sagesource.opensagent.core.llm.completion.LLMCompletion;
@@ -41,6 +40,12 @@ public class ChatService {
     @Qualifier("smartCompletion")
     private final LLMCompletion smartCompletion;
 
+    @Qualifier("simplePromptTemplate")
+    private final PromptTemplate simplePromptTemplate;
+
+    @Qualifier("smartPromptTemplate")
+    private final PromptTemplate smartPromptTemplate;
+
     private final ConversationService conversationService;
     private final TitleAgentService titleAgentService;
 
@@ -49,18 +54,6 @@ public class ChatService {
 
     @Qualifier("smartAgentConfig")
     private final AgentConfig smartAgentConfig;
-
-    private static final PromptTemplate DEFAULT_PROMPT = new PromptTemplate() {
-        @Override
-        public String render(PromptRenderContext context) {
-            return "你是一个 helpful 的AI助手，请尽力回答用户的问题。";
-        }
-
-        @Override
-        public String getRawContent() {
-            return "你是一个 helpful 的AI助手，请尽力回答用户的问题。";
-        }
-    };
 
     private static final String ACTION_PREFIX = "AGENT_ACTION[";
 
@@ -183,7 +176,7 @@ public class ChatService {
         if ("smart".equals(version)) {
             return new ReActAgent(
                     "Sagent-Smart",
-                    DEFAULT_PROMPT,
+                    smartPromptTemplate,
                     null,
                     memory,
                     smartCompletion,
@@ -193,7 +186,7 @@ public class ChatService {
         }
         return new SimpleAgent(
                 "Sagent-Simple",
-                DEFAULT_PROMPT,
+                simplePromptTemplate,
                 null,
                 memory,
                 simpleCompletion,

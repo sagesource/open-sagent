@@ -3,7 +3,6 @@ package ai.sagesource.opensagent.web.service;
 import ai.sagesource.opensagent.core.agent.Agent;
 import ai.sagesource.opensagent.core.agent.AgentConfig;
 import ai.sagesource.opensagent.core.agent.AgentResponse;
-import ai.sagesource.opensagent.core.agent.prompt.PromptRenderContext;
 import ai.sagesource.opensagent.core.agent.prompt.PromptTemplate;
 import ai.sagesource.opensagent.core.llm.completion.LLMCompletion;
 import ai.sagesource.opensagent.core.llm.message.UserCompletionMessage;
@@ -30,13 +29,11 @@ public class TitleAgentService {
     @Qualifier("titleCompletion")
     private final LLMCompletion titleCompletion;
 
+    @Qualifier("titlePromptTemplate")
+    private final PromptTemplate titlePromptTemplate;
+
     @Qualifier("titleAgentConfig")
     private final AgentConfig titleAgentConfig;
-
-    private static final String TITLE_PROMPT = """
-            你是一个对话标题生成助手。请根据用户的输入内容，生成一个简短的对话标题（不超过10个字）。
-            只输出标题文本，不要添加任何解释、引号或额外内容。
-            """;
 
     private static final String FIRST_TITLE = "新对话";
 
@@ -56,17 +53,7 @@ public class TitleAgentService {
 
             Agent agent = new SimpleAgent(
                     "TitleAgent",
-                    new PromptTemplate() {
-                        @Override
-                        public String render(PromptRenderContext context) {
-                            return TITLE_PROMPT;
-                        }
-
-                        @Override
-                        public String getRawContent() {
-                            return TITLE_PROMPT;
-                        }
-                    },
+                    titlePromptTemplate,
                     null,
                     memory,
                     titleCompletion,

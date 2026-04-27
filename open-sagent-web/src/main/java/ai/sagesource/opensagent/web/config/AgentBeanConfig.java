@@ -1,14 +1,26 @@
 package ai.sagesource.opensagent.web.config;
 
+import ai.sagesource.opensagent.infrastructure.agent.prompt.DefaultPromptTemplate;
+import ai.sagesource.opensagent.core.agent.prompt.PromptRenderContext;
+import ai.sagesource.opensagent.core.agent.prompt.PromptTemplate;
+import ai.sagesource.opensagent.core.agent.prompt.PromptTemplateLoader;
 import ai.sagesource.opensagent.core.llm.client.LLMClient;
 import ai.sagesource.opensagent.core.llm.client.LLMClientConfig;
 import ai.sagesource.opensagent.core.llm.completion.LLMCompletion;
+import ai.sagesource.opensagent.infrastructure.agent.prompt.ClasspathPromptTemplateLoader;
+import ai.sagesource.opensagent.infrastructure.agent.prompt.FileSystemPromptTemplateLoader;
 import ai.sagesource.opensagent.infrastructure.llm.openai.OpenAILLMClient;
 import ai.sagesource.opensagent.infrastructure.llm.openai.OpenAICompletionFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
 
 /**
  * Agent初始化配置
@@ -22,6 +34,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Slf4j
 @Configuration
+@EnableConfigurationProperties(PromptProperties.class)
 public class AgentBeanConfig {
 
     // ========== 全局默认LLM配置（作为各Agent的fallback默认值） ==========
@@ -82,6 +95,9 @@ public class AgentBeanConfig {
     @Value("${sagent.agent.title.max-tokens:100}")
     private Integer titleMaxTokens;
 
+    @Autowired
+    private PromptProperties promptProperties;
+
     private LLMClient createLLMClient(String apiKey, String baseUrl, String model) {
         String actualApiKey = (apiKey != null && !apiKey.isEmpty()) ? apiKey : defaultApiKey;
         String actualBaseUrl = (baseUrl != null && !baseUrl.isEmpty()) ? baseUrl : defaultBaseUrl;
@@ -109,6 +125,69 @@ public class AgentBeanConfig {
     public LLMCompletion titleCompletion() {
         LLMClient client = createLLMClient(titleApiKey, titleBaseUrl, titleModel);
         return OpenAICompletionFactory.createCompletion(client);
+    }
+
+    // ========== PromptTemplate Bean ==========
+
+    @Bean
+    public PromptTemplate simplePromptTemplate() {
+        return loadPrompt(
+                promptProperties.getSimple().getPromptPath(),
+                promptProperties.getSimple().getPromptVars(),
+                "你是一个 helpful 的AI助手，请尽力回答用户的问题。"
+        );
+    }
+
+    @Bean
+    public PromptTemplate smartPromptTemplate() {
+        return loadPrompt(
+                promptProperties.getSmart().getPromptPath(),
+                promptProperties.getSmart().getPromptVars(),
+                "你是一个 helpful 的AI助手，请尽力回答用户的问题。你可以使用工具来辅助完成任务。"
+        );
+    }
+
+    @Bean
+    public PromptTemplate titlePromptTemplate() {
+        return loadPrompt(
+                promptProperties.getTitle().getPromptPath(),
+                promptProperties.getTitle().getPromptVars(),
+                """
+                你是一个对话标题生成助手。请根据用户的输入内容，生成一个简短的对话标题（不超过10个字）。
+                只输出标题文本，不要添加任何解释、引号或额外内容。
+                """
+        );
+    }
+
+    private PromptTemplate loadPrompt(String path, Map<String, String> vars, String fallback) {
+        if (path == null || path.isBlank()) {
+            return new DefaultPromptTemplate(fallback);
+        }
+
+        PromptTemplateLoader loader;
+        String templateName;
+
+        if (path.startsWith("classpath:")) {
+            loader = new ClasspathPromptTemplateLoader();
+            templateName = path.substring("classpath:".length());
+        } else if (path.startsWith("/") || path.contains(":/") || path.contains(":\\")) {
+            Path dir = Paths.get(path).getParent();
+            templateName = Paths.get(path).getFileName().toString();
+            loader = new FileSystemPromptTemplateLoader(dir);
+        } else {
+            loader = new ClasspathPromptTemplateLoader();
+            templateName = path;
+        }
+
+        try {
+            PromptTemplate template = loader.load(templateName);
+            String rendered = template.render(PromptRenderContext.of(vars));
+            log.info("> AgentBeanConfig | 加载Prompt模板成功: {} <", path);
+            return new DefaultPromptTemplate(rendered);
+        } catch (Exception e) {
+            log.warn("> AgentBeanConfig | 加载Prompt模板失败[{}]，使用默认Prompt <", path);
+            return new DefaultPromptTemplate(fallback);
+        }
     }
 
     @Bean
