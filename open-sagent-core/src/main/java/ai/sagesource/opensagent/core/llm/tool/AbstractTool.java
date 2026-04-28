@@ -43,8 +43,8 @@ public abstract class AbstractTool implements Tool {
             log.debug("工具执行完成: {}, callId: {}", definition.getName(), toolCall.getId());
             return result;
         } catch (Exception e) {
-            log.error("工具执行失败: {}, callId: {}, error: {}",
-                    definition.getName(), toolCall.getId(), e.getMessage(), e);
+            log.error("> Tool | 工具执行失败: {} | callId: {} <",
+                    definition.getName(), toolCall.getId(), e);
             return ToolResult.failure(toolCall.getId(),
                     "工具执行失败: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getName()));
         }

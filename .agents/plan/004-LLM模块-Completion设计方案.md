@@ -622,6 +622,7 @@ public class OpenAICompletion implements LLMCompletion {
             closeableRef.set(streamResponse);
 
             ChatCompletionAccumulator accumulator = ChatCompletionAccumulator.create();
+            Map<Integer, MutableToolCall> toolCallMap = new LinkedHashMap<>();
             StringBuilder textBuilder = new StringBuilder();
             StringBuilder reasoningBuilder = new StringBuilder();
             String finishReason = null;
@@ -657,7 +658,7 @@ public class OpenAICompletion implements LLMCompletion {
                     reasoningBuilder.append(deltaReasoning);
                 }
 
-                List<ToolCall> deltaToolCalls = extractDeltaToolCalls(accumulator, chunk);
+                List<ToolCall> deltaToolCalls = extractDeltaToolCalls(chunk, toolCallMap);
 
                 StreamChunk streamChunk = StreamChunk.builder()
                         .deltaText(deltaText)
@@ -838,38 +839,47 @@ public class OpenAICompletion implements LLMCompletion {
     }
 
     /**
-     * 从accumulator当前聚合状态和当前chunk中提取增量的ToolCall
+     * 从当前chunk的delta中提取增量的ToolCall
+     * <p>
+     * 使用外部维护的toolCallMap自行聚合，避免在流中间调用accumulator.chatCompletion()
      */
-    private List<ToolCall> extractDeltaToolCalls(ChatCompletionAccumulator accumulator, ChatCompletionChunk chunk) {
+    private List<ToolCall> extractDeltaToolCalls(ChatCompletionChunk chunk,
+                                                  Map<Integer, MutableToolCall> toolCallMap) {
         List<ToolCall> result = new ArrayList<>();
-        ChatCompletion accumulated = accumulator.chatCompletion();
-        if (accumulated.choices().isEmpty()) {
-            return result;
-        }
-        ChatCompletionMessage message = accumulated.choices().get(0).message();
-        if (message.toolCalls().isEmpty()) {
-            return result;
-        }
-        // 当前chunk中的tool call索引
-        Set<Integer> indices = new HashSet<>();
         ChatCompletionChunk.Choice choice = chunk.choices().isEmpty() ? null : chunk.choices().get(0);
-        if (choice != null && choice.delta() != null && choice.delta().toolCalls().isPresent()) {
-            for (ChatCompletionChunk.Choice.Delta.ToolCall dt : choice.delta().toolCalls().get()) {
-                indices.add(dt.index());
-            }
+        if (choice == null || choice.delta() == null || !choice.delta().toolCalls().isPresent()) {
+            return result;
         }
-        List<ChatCompletionMessageToolCall> all = message.toolCalls().get();
-        for (int index : indices) {
-            if (index >= 0 && index < all.size()) {
-                ChatCompletionMessageToolCall tc = all.get(index);
+        for (ChatCompletionChunk.Choice.Delta.ToolCall dt : choice.delta().toolCalls().get()) {
+            int index = (int) dt.index();
+            MutableToolCall mtc = toolCallMap.computeIfAbsent(index, k -> new MutableToolCall());
+            dt.id().ifPresent(id -> {
+                if (!id.isEmpty()) mtc.id = id;
+            });
+            dt.function().ifPresent(func -> {
+                func.name().ifPresent(name -> {
+                    if (!name.isEmpty()) mtc.name = name;
+                });
+                func.arguments().ifPresent(args -> mtc.arguments.append(args));
+            });
+            if (mtc.id != null && mtc.name != null) {
                 result.add(ToolCall.builder()
-                        .id(tc.id())
-                        .name(tc.function().name())
-                        .arguments(parseArguments(tc.function().arguments()))
+                        .id(mtc.id)
+                        .name(mtc.name)
+                        .arguments(parseArguments(mtc.arguments.toString()))
                         .build());
             }
         }
         return result;
+    }
+
+    /**
+     * 流式ToolCall手动聚合器
+     */
+    private static class MutableToolCall {
+        String id;
+        String name;
+        StringBuilder arguments = new StringBuilder();
     }
 
     @SuppressWarnings("unchecked")
@@ -1154,6 +1164,74 @@ public CompletionCancelToken streamAsync(CompletionRequest request, Consumer<Str
 }
 ```
 
+### 变更 4（2026-04-28）：修复流式调用中 `extractDeltaToolCalls` 提前调用 `accumulator.chatCompletion()` 导致异常
+
+**变更原因：**
+1. 生产环境出现流式调用异常：`java.lang.IllegalStateException: Final chat completion chunk(s) not yet received.`
+2. 根因：`extractDeltaToolCalls` 方法在流式循环中间调用了 `accumulator.chatCompletion()`，但 `ChatCompletionAccumulator.chatCompletion()` 只有在**所有 chunk 接收完毕**后才能调用
+3. OpenAI Java SDK 的 `ChatCompletionAccumulator` 设计为：流中间仅支持 `accumulate(chunk)`，流结束后才能调用 `chatCompletion()` 获取完整聚合结果
+4. 该问题导致任何包含 tool_calls 的流式响应都会在中间 chunk 处理时崩溃
+
+**文件变更：**
+
+| 文件路径 | 变更类型 | 说明 |
+|----------|----------|------|
+| `.../infrastructure/llm/openai/OpenAICompletion.java` | 修改 | `executeStream` 中新增手动 `toolCallMap` 聚合状态；`extractDeltaToolCalls` 改为从 chunk delta 和外部 map 中提取增量 ToolCall，不再在流中间调用 `accumulator.chatCompletion()`；新增 `MutableToolCall` 内部辅助类 |
+
+**关键代码变更：**
+
+```java
+// 修改前：流中间调用 accumulator.chatCompletion() 导致 IllegalStateException
+private List<ToolCall> extractDeltaToolCalls(ChatCompletionAccumulator accumulator, ChatCompletionChunk chunk) {
+    List<ToolCall> result = new ArrayList<>();
+    ChatCompletion accumulated = accumulator.chatCompletion(); // ❌ 流中间抛异常
+    ...
+}
+
+// 修改后：使用外部 Map 自行聚合，避免流中间调用 chatCompletion()
+private List<ToolCall> extractDeltaToolCalls(ChatCompletionChunk chunk,
+                                              Map<Integer, MutableToolCall> toolCallMap) {
+    List<ToolCall> result = new ArrayList<>();
+    ChatCompletionChunk.Choice choice = chunk.choices().isEmpty() ? null : chunk.choices().get(0);
+    if (choice == null || choice.delta() == null || !choice.delta().toolCalls().isPresent()) {
+        return result;
+    }
+    for (ChatCompletionChunk.Choice.Delta.ToolCall dt : choice.delta().toolCalls().get()) {
+        int index = (int) dt.index();
+        MutableToolCall mtc = toolCallMap.computeIfAbsent(index, k -> new MutableToolCall());
+        dt.id().ifPresent(id -> { if (!id.isEmpty()) mtc.id = id; });
+        dt.function().ifPresent(func -> {
+            func.name().ifPresent(name -> { if (!name.isEmpty()) mtc.name = name; });
+            func.arguments().ifPresent(args -> mtc.arguments.append(args));
+        });
+        if (mtc.id != null && mtc.name != null) {
+            result.add(ToolCall.builder()
+                    .id(mtc.id)
+                    .name(mtc.name)
+                    .arguments(parseArguments(mtc.arguments.toString()))
+                    .build());
+        }
+    }
+    return result;
+}
+
+private static class MutableToolCall {
+    String id;
+    String name;
+    StringBuilder arguments = new StringBuilder();
+}
+```
+
+```java
+// 修改前：executeStream 中调用方式
+List<ToolCall> deltaToolCalls = extractDeltaToolCalls(accumulator, chunk);
+
+// 修改后：executeStream 中新增 toolCallMap 并修改调用方式
+Map<Integer, MutableToolCall> toolCallMap = new LinkedHashMap<>();
+// ...
+List<ToolCall> deltaToolCalls = extractDeltaToolCalls(chunk, toolCallMap);
+```
+
 ## 6. 评审记录
 
 | 评审人 | 时间 | 结论 | 备注 |
@@ -1162,4 +1240,5 @@ public CompletionCancelToken streamAsync(CompletionRequest request, Consumer<Str
 | User | 2026-04-14 | 需修改 | 问题2：异步执行时，Executor应由调用方传入 |
 | User | 2026-04-14 | 通过 | 方案通过，可以实施代码变更 |
 | User | 2026-04-19 | 通过 | 方案通过，可以实施代码变更 |
+| User | 2026-04-28 | 通过 | 变更04评审通过，修复流式ToolCall聚合异常 |
 | [待填写] | [待填写] | [通过/需修改] | |

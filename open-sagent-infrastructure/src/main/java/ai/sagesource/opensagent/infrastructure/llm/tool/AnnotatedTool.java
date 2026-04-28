@@ -60,13 +60,13 @@ public class AnnotatedTool implements Tool {
             return ToolResult.success(toolCall.getId(), result != null ? result.toString() : "");
         } catch (InvocationTargetException e) {
             Throwable cause = e.getTargetException() != null ? e.getTargetException() : e;
-            log.error("注解工具执行失败: {}, callId: {}, error: {}",
-                    metadata.getDefinition().getName(), toolCall.getId(), cause.getMessage(), cause);
+            log.error("> Tool | 注解工具执行失败: {} | callId: {} <",
+                    metadata.getDefinition().getName(), toolCall.getId(), cause);
             return ToolResult.failure(toolCall.getId(),
                     "工具执行失败: " + (cause.getMessage() != null ? cause.getMessage() : cause.getClass().getName()));
         } catch (Exception e) {
-            log.error("注解工具执行失败: {}, callId: {}, error: {}",
-                    metadata.getDefinition().getName(), toolCall.getId(), e.getMessage(), e);
+            log.error("> Tool | 注解工具执行失败: {} | callId: {} <",
+                    metadata.getDefinition().getName(), toolCall.getId(), e);
             return ToolResult.failure(toolCall.getId(),
                     "工具执行失败: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getName()));
         }

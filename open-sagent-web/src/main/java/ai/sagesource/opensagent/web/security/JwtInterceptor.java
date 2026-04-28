@@ -40,6 +40,11 @@ public class JwtInterceptor implements HandlerInterceptor {
         if (bearer != null && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }
+        // SSE/EventSource 不支持自定义 Header，支持从 URL Query Parameter 获取 token
+        String token = request.getParameter("token");
+        if (token != null && !token.isBlank()) {
+            return token;
+        }
         return null;
     }
 }

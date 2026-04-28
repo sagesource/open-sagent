@@ -53,7 +53,7 @@ public class ToolExecutor {
             try {
                 results.add(execute(toolCall));
             } catch (Exception e) {
-                log.error("批量执行工具失败: {}", toolCall.getName(), e);
+                log.error("> ToolExecutor | 批量执行工具失败: {} <", toolCall.getName(), e);
                 results.add(ToolResult.failure(
                         toolCall.getId(),
                         "执行异常: " + e.getMessage()));

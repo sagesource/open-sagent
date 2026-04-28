@@ -23,15 +23,15 @@ public class ChatController {
     @GetMapping(value = "/stream", produces = "text/event-stream")
     public SseEmitter streamChat(
             HttpServletRequest request,
-            @RequestParam String sessionId,
-            @RequestParam String message,
-            @RequestParam(defaultValue = "simple") String agentVersion) {
+            @RequestParam("sessionId") String sessionId,
+            @RequestParam("message") String message,
+            @RequestParam(value = "agentVersion", defaultValue = "simple") String agentVersion) {
         Long userId = (Long) request.getAttribute(JwtInterceptor.ATTR_USER_ID);
         return chatService.streamChat(userId, sessionId, message, agentVersion);
     }
 
     @PostMapping("/{sessionId}/cancel")
-    public void cancelChat(@PathVariable String sessionId) {
+    public void cancelChat(@PathVariable("sessionId") String sessionId) {
         chatService.cancelChat(sessionId);
     }
 }

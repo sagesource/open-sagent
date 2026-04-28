@@ -15,6 +15,7 @@ import ai.sagesource.opensagent.web.entity.Conversation;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -63,6 +64,9 @@ public class ChatService {
     @Qualifier("smartAgentConfig")
     private AgentConfig smartAgentConfig;
 
+    @Value("${sagent.memory.db-path:./memory.db}")
+    private String memoryDbPath;
+
     private static final String ACTION_PREFIX = "AGENT_ACTION[";
 
     /**
@@ -93,7 +97,7 @@ public class ChatService {
         LLMCompletion memoryCompletion = "smart".equals(agentVersion) ? smartCompletion : simpleCompletion;
         Memory memory = new MultipleSQLLiteMemory(
                 sessionId,
-                "./memory.db",
+                memoryDbPath,
                 50,
                 memoryCompletion,
                 null
@@ -132,7 +136,7 @@ public class ChatService {
                     emitter.complete();
                 }
             } catch (IOException e) {
-                log.error("> ChatService | SSE发送失败: {} <", e.getMessage());
+                log.error("> ChatService | SSE发送失败 <", e);
                 emitter.completeWithError(e);
             }
         };
@@ -145,7 +149,7 @@ public class ChatService {
                 );
                 activeTokens.put(emitterId, token);
             } catch (Exception e) {
-                log.error("> ChatService | 流式对话异常: {} <", e.getMessage());
+                log.error("> ChatService | 流式对话异常 <", e);
                 try {
                     emitter.send(SseEmitter.event()
                             .name("error")

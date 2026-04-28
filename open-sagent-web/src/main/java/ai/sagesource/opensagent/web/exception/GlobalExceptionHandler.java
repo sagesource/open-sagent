@@ -19,7 +19,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ApiResponse<Void> handleIllegalArgument(IllegalArgumentException e) {
-        log.warn("> GlobalExceptionHandler | 业务异常: {} <", e.getMessage());
+        log.warn("> GlobalExceptionHandler | 业务异常: <", e);
         return ApiResponse.error(400, e.getMessage());
     }
 

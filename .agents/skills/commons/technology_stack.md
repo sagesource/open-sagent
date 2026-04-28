@@ -98,7 +98,7 @@ public interface Test {
 - 异常日志使用ERROR级别
 - 业务日志使用INFO级别
 - 非阻断性问题使用WARN级别
-- 日志格式 log.info("> 模块 | 日志内容 <")
+- 日志格式 log.info("> 模块 | 日志内容 <") | log.error("> 模块 | id:{} | 执行异常: <", id, e)
 
 ### Spring Bean依赖注入规范
 

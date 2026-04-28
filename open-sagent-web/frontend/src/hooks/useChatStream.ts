@@ -23,7 +23,8 @@ export function useChatStream() {
 
     setState({ content: '', action: null, isStreaming: true, error: null });
 
-    const params = new URLSearchParams({ sessionId, message, agentVersion });
+    const token = localStorage.getItem('token') || '';
+    const params = new URLSearchParams({ sessionId, message, agentVersion, token });
     const es = new EventSource(`/api/chat/stream?${params.toString()}`, {
       withCredentials: false,
     });

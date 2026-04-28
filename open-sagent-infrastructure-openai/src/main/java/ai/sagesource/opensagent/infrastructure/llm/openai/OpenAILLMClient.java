@@ -35,7 +35,7 @@ public class OpenAILLMClient implements LLMClient {
             this.openAIClient = buildClient(config);
             log.debug("> LLM | OpenAI客户端创建成功，模型: {} <", config.getModel());
         } catch (Exception e) {
-            log.error("> LLM | 创建OpenAI客户端失败: {} <", e.getMessage(), e);
+            log.error("> LLM | 创建OpenAI客户端失败 <", e);
             throw new OpenSagentLLMException("创建OpenAI LLM客户端失败: " + e.getMessage(), e);
         }
     }

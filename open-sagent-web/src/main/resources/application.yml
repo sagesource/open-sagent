@@ -61,6 +61,10 @@ sagent:
       prompt-path: ${TITLE_PROMPT_PATH:prompts/title-agent.txt}
       prompt-vars:
         max-length: ${TITLE_PROMPT_MAX_LENGTH:10}
+  # Memory配置
+  memory:
+    db-path: ${SAGENT_MEMORY_DB_PATH:./open-sagent-web.db}
+
   # JWT配置
   jwt:
     secret: ${JWT_SECRET:open-sagent-default-secret-key-2026}

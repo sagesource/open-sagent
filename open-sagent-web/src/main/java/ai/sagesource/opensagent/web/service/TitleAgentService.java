@@ -11,6 +11,7 @@ import ai.sagesource.opensagent.infrastructure.agent.memory.MultipleSQLLiteMemor
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -37,6 +38,9 @@ public class TitleAgentService {
     @Qualifier("titleAgentConfig")
     private AgentConfig titleAgentConfig;
 
+    @Value("${sagent.memory.db-path:./memory.db}")
+    private String memoryDbPath;
+
     private static final String FIRST_TITLE = "新对话";
 
     /**
@@ -51,7 +55,13 @@ public class TitleAgentService {
 
         try {
             // 使用独立的Memory（sessionId加前缀避免冲突）
-            MultipleSQLLiteMemory memory = new MultipleSQLLiteMemory("title-agent-" + System.currentTimeMillis());
+            MultipleSQLLiteMemory memory = new MultipleSQLLiteMemory(
+                    "title-agent-" + System.currentTimeMillis(),
+                    memoryDbPath,
+                    50,
+                    null,
+                    null
+            );
 
             Agent agent = new SimpleAgent(
                     "TitleAgent",

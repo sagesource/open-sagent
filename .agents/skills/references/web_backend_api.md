@@ -22,6 +22,8 @@ Authorization: Bearer {token}
 
 Token有效期24小时，通过登录接口获取。
 
+> **SSE 流式对话接口特殊说明**：由于浏览器原生 `EventSource` 不支持自定义 HTTP Header，后端对 `/api/chat/stream` 接口额外支持从 URL Query Parameter `token` 中获取 JWT Token 作为 fallback 认证方式。
+
 ## 统一响应格式
 
 ```json
@@ -264,13 +266,14 @@ GET /api/conversations/{id}/messages
 ### 10. 流式对话
 
 ```
-GET /api/chat/stream?sessionId={sessionId}&message={message}&agentVersion={agentVersion}
+GET /api/chat/stream?sessionId={sessionId}&message={message}&agentVersion={agentVersion}&token={token}
 ```
 
 **参数：**
 - sessionId: 必填，对话会话ID
 - message: 必填，用户输入消息
 - agentVersion: 可选，默认"simple"，可选值["simple", "smart"]
+- token: 必填，JWT Token（SSE 场景下通过 URL Query Param 传递）
 
 **响应格式：** SSE (text/event-stream)
 
@@ -342,7 +345,8 @@ const headers = () => ({
 ### SSE流式对话
 
 ```typescript
-const params = new URLSearchParams({ sessionId, message, agentVersion });
+const token = localStorage.getItem('token') || '';
+const params = new URLSearchParams({ sessionId, message, agentVersion, token });
 const es = new EventSource(`/api/chat/stream?${params.toString()}`);
 
 es.addEventListener('message', (e) => {

@@ -57,7 +57,7 @@ public class OpenAICompletion implements LLMCompletion {
             log.info("> Completion | 同步调用完成，finishReason: {} <", response.getFinishReason());
             return response;
         } catch (Exception e) {
-            log.error("> Completion | 同步调用失败: {} <", e.getMessage(), e);
+            log.error("> Completion | 同步调用失败 <", e);
             throw new OpenSagentLLMException("OpenAI Completion调用失败: " + e.getMessage(), e);
         }
     }
@@ -99,7 +99,7 @@ public class OpenAICompletion implements LLMCompletion {
             executeStream(request, consumer, cancelled, closeableRef);
             log.info("> Completion | 流式调用结束 <");
         } catch (Exception e) {
-            log.error("> Completion | 流式调用失败: {} <", e.getMessage(), e);
+            log.error("> Completion | 流式调用失败 <", e);
             throw new OpenSagentLLMException("OpenAI Completion流式调用失败: " + e.getMessage(), e);
         }
 
@@ -139,7 +139,7 @@ public class OpenAICompletion implements LLMCompletion {
                 executeStream(request, consumer, cancelled, closeableRef);
                 log.info("> Completion | 异步流式调用结束 <");
             } catch (Exception e) {
-                log.error("> Completion | 异步流式调用失败: {} <", e.getMessage(), e);
+                log.error("> Completion | 异步流式调用失败 <", e);
                 throw new OpenSagentLLMException("OpenAI Completion异步流式调用失败: " + e.getMessage(), e);
             }
         }, executor);
@@ -156,6 +156,7 @@ public class OpenAICompletion implements LLMCompletion {
             closeableRef.set(streamResponse);
 
             ChatCompletionAccumulator accumulator = ChatCompletionAccumulator.create();
+            Map<Integer, MutableToolCall> toolCallMap = new LinkedHashMap<>();
             StringBuilder textBuilder = new StringBuilder();
             StringBuilder reasoningBuilder = new StringBuilder();
             String finishReason = null;
@@ -191,7 +192,7 @@ public class OpenAICompletion implements LLMCompletion {
                     reasoningBuilder.append(deltaReasoning);
                 }
 
-                List<ToolCall> deltaToolCalls = extractDeltaToolCalls(accumulator, chunk);
+                List<ToolCall> deltaToolCalls = extractDeltaToolCalls(chunk, toolCallMap);
 
                 StreamChunk streamChunk = StreamChunk.builder()
                         .deltaText(deltaText)
@@ -382,38 +383,43 @@ public class OpenAICompletion implements LLMCompletion {
         return null;
     }
 
-    private List<ToolCall> extractDeltaToolCalls(ChatCompletionAccumulator accumulator, ChatCompletionChunk chunk) {
+    private List<ToolCall> extractDeltaToolCalls(ChatCompletionChunk chunk,
+                                                  Map<Integer, MutableToolCall> toolCallMap) {
         List<ToolCall> result = new ArrayList<>();
-        ChatCompletion accumulated = accumulator.chatCompletion();
-        if (accumulated.choices().isEmpty()) {
-            return result;
-        }
-        ChatCompletionMessage message = accumulated.choices().get(0).message();
-        if (message.toolCalls().isEmpty()) {
-            return result;
-        }
-        Set<Integer> indices = new HashSet<>();
         ChatCompletionChunk.Choice choice = chunk.choices().isEmpty() ? null : chunk.choices().get(0);
-        if (choice != null && choice.delta() != null && choice.delta().toolCalls().isPresent()) {
-            for (ChatCompletionChunk.Choice.Delta.ToolCall dt : choice.delta().toolCalls().get()) {
-                indices.add((int) dt.index());
-            }
+        if (choice == null || choice.delta() == null || !choice.delta().toolCalls().isPresent()) {
+            return result;
         }
-        List<ChatCompletionMessageToolCall> all = message.toolCalls().get();
-        for (int index : indices) {
-            if (index >= 0 && index < all.size()) {
-                ChatCompletionMessageToolCall tc = all.get(index);
-                if (tc.isFunction()) {
-                    ChatCompletionMessageFunctionToolCall functionTc = tc.asFunction();
-                    result.add(ToolCall.builder()
-                            .id(functionTc.id())
-                            .name(functionTc.function().name())
-                            .arguments(parseArguments(functionTc.function().arguments()))
-                            .build());
-                }
+        for (ChatCompletionChunk.Choice.Delta.ToolCall dt : choice.delta().toolCalls().get()) {
+            int index = (int) dt.index();
+            MutableToolCall mtc = toolCallMap.computeIfAbsent(index, k -> new MutableToolCall());
+            dt.id().ifPresent(id -> {
+                if (!id.isEmpty()) mtc.id = id;
+            });
+            dt.function().ifPresent(func -> {
+                func.name().ifPresent(name -> {
+                    if (!name.isEmpty()) mtc.name = name;
+                });
+                func.arguments().ifPresent(args -> mtc.arguments.append(args));
+            });
+            if (mtc.id != null && mtc.name != null) {
+                result.add(ToolCall.builder()
+                        .id(mtc.id)
+                        .name(mtc.name)
+                        .arguments(parseArguments(mtc.arguments.toString()))
+                        .build());
             }
         }
         return result;
+    }
+
+    /**
+     * 流式ToolCall手动聚合器
+     */
+    private static class MutableToolCall {
+        String id;
+        String name;
+        StringBuilder arguments = new StringBuilder();
     }
 
     @SuppressWarnings("unchecked")

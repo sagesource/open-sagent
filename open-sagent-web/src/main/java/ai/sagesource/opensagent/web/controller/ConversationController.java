@@ -56,7 +56,7 @@ public class ConversationController {
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(HttpServletRequest request, @PathVariable Long id) {
+    public ApiResponse<Void> delete(HttpServletRequest request, @PathVariable("id") Long id) {
         Long userId = (Long) request.getAttribute(JwtInterceptor.ATTR_USER_ID);
         conversationService.deleteConversation(userId, id);
         return ApiResponse.success();
@@ -65,7 +65,7 @@ public class ConversationController {
     @PutMapping("/{id}/title")
     public ApiResponse<Void> updateTitle(
             HttpServletRequest request,
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody UpdateTitleRequest body) {
         Long userId = (Long) request.getAttribute(JwtInterceptor.ATTR_USER_ID);
         conversationService.updateTitle(userId, id, body.getTitle());
@@ -73,7 +73,7 @@ public class ConversationController {
     }
 
     @GetMapping("/{id}/messages")
-    public ApiResponse<List<MessageDTO>> getMessages(HttpServletRequest request, @PathVariable Long id) {
+    public ApiResponse<List<MessageDTO>> getMessages(HttpServletRequest request, @PathVariable("id") Long id) {
         Long userId = (Long) request.getAttribute(JwtInterceptor.ATTR_USER_ID);
         List<ChatMessage> messages = conversationService.getMessages(id);
         return ApiResponse.success(messages.stream()
