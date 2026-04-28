@@ -5,8 +5,8 @@ import ai.sagesource.opensagent.web.entity.ChatMessage;
 import ai.sagesource.opensagent.web.entity.Conversation;
 import ai.sagesource.opensagent.web.security.JwtInterceptor;
 import ai.sagesource.opensagent.web.service.ConversationService;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,10 +20,10 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/conversations")
-@RequiredArgsConstructor
 public class ConversationController {
 
-    private final ConversationService conversationService;
+    @Resource
+    private ConversationService conversationService;
 
     @GetMapping
     public ApiResponse<List<ConversationDTO>> list(HttpServletRequest request) {

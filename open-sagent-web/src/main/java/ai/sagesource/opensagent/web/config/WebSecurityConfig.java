@@ -1,7 +1,7 @@
 package ai.sagesource.opensagent.web.config;
 
 import ai.sagesource.opensagent.web.security.JwtInterceptor;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Resource;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -13,10 +13,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @time: 2026/4/26
  */
 @Configuration
-@RequiredArgsConstructor
 public class WebSecurityConfig implements WebMvcConfigurer {
 
-    private final JwtInterceptor jwtInterceptor;
+    @Resource
+    private JwtInterceptor jwtInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {

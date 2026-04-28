@@ -4,7 +4,7 @@ import ai.sagesource.opensagent.web.entity.ChatMessage;
 import ai.sagesource.opensagent.web.entity.Conversation;
 import ai.sagesource.opensagent.web.repository.ConversationRepository;
 import ai.sagesource.opensagent.web.repository.MessageRepository;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +20,13 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ConversationService {
 
-    private final ConversationRepository conversationRepository;
-    private final MessageRepository messageRepository;
+    @Resource
+    private ConversationRepository conversationRepository;
+
+    @Resource
+    private MessageRepository messageRepository;
 
     /**
      * 获取用户的对话列表

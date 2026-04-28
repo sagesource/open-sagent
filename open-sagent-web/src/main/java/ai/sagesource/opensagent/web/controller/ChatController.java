@@ -2,8 +2,8 @@ package ai.sagesource.opensagent.web.controller;
 
 import ai.sagesource.opensagent.web.security.JwtInterceptor;
 import ai.sagesource.opensagent.web.service.ChatService;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -15,10 +15,10 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  */
 @RestController
 @RequestMapping("/api/chat")
-@RequiredArgsConstructor
 public class ChatController {
 
-    private final ChatService chatService;
+    @Resource
+    private ChatService chatService;
 
     @GetMapping(value = "/stream", produces = "text/event-stream")
     public SseEmitter streamChat(

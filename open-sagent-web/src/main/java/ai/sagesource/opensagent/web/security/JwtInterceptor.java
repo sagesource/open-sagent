@@ -1,8 +1,8 @@
 package ai.sagesource.opensagent.web.security;
 
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -15,10 +15,10 @@ import org.springframework.web.servlet.HandlerInterceptor;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class JwtInterceptor implements HandlerInterceptor {
 
-    private final JwtUtil jwtUtil;
+    @Resource
+    private JwtUtil jwtUtil;
 
     public static final String HEADER_AUTH = "Authorization";
     public static final String ATTR_USER_ID = "userId";

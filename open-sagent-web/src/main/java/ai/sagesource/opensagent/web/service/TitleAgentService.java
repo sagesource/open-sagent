@@ -8,7 +8,7 @@ import ai.sagesource.opensagent.core.llm.completion.LLMCompletion;
 import ai.sagesource.opensagent.core.llm.message.UserCompletionMessage;
 import ai.sagesource.opensagent.infrastructure.agent.SimpleAgent;
 import ai.sagesource.opensagent.infrastructure.agent.memory.MultipleSQLLiteMemory;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -23,17 +23,19 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TitleAgentService {
 
+    @Resource
     @Qualifier("titleCompletion")
-    private final LLMCompletion titleCompletion;
+    private LLMCompletion titleCompletion;
 
+    @Resource
     @Qualifier("titlePromptTemplate")
-    private final PromptTemplate titlePromptTemplate;
+    private PromptTemplate titlePromptTemplate;
 
+    @Resource
     @Qualifier("titleAgentConfig")
-    private final AgentConfig titleAgentConfig;
+    private AgentConfig titleAgentConfig;
 
     private static final String FIRST_TITLE = "新对话";
 

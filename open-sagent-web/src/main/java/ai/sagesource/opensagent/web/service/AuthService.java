@@ -4,7 +4,7 @@ import ai.sagesource.opensagent.web.entity.User;
 import ai.sagesource.opensagent.web.repository.UserRepository;
 import ai.sagesource.opensagent.web.security.JwtUtil;
 import ai.sagesource.opensagent.web.security.PasswordEncoder;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -16,12 +16,16 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    @Resource
+    private UserRepository userRepository;
+
+    @Resource
+    private PasswordEncoder passwordEncoder;
+
+    @Resource
+    private JwtUtil jwtUtil;
 
     /**
      * 用户注册

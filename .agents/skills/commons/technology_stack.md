@@ -100,6 +100,23 @@ public interface Test {
 - 非阻断性问题使用WARN级别
 - 日志格式 log.info("> 模块 | 日志内容 <")
 
+### Spring Bean依赖注入规范
+
+- 要使用@Resource注解
+- 如果同一个Class有多个Bean时，使用@Qualifier指定名称
+- 不能使用@RequiredArgsConstructor注解，通过构造方法注入Bean
+
+示例代码
+```java
+@Slf4j
+@Service  
+public class ChatService {
+    @Resource
+    @Qualifier("transactionTemplate") // 如果同一个Class有多个Bean时，指定名称
+    private TransactionTemplate transactionTemplate;
+}
+```
+
 ## 模块依赖规范
 
 - 所有Maven子模块需要在根pom文件中定义

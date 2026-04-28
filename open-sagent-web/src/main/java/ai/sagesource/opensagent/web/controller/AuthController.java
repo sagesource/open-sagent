@@ -4,9 +4,9 @@ import ai.sagesource.opensagent.web.dto.*;
 import ai.sagesource.opensagent.web.entity.User;
 import ai.sagesource.opensagent.web.security.JwtInterceptor;
 import ai.sagesource.opensagent.web.service.AuthService;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    @Resource
+    private AuthService authService;
 
     @PostMapping("/register")
     public ApiResponse<Void> register(@Valid @RequestBody RegisterRequest request) {

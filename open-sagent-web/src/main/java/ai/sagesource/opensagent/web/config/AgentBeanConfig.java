@@ -11,8 +11,8 @@ import ai.sagesource.opensagent.infrastructure.agent.prompt.ClasspathPromptTempl
 import ai.sagesource.opensagent.infrastructure.agent.prompt.FileSystemPromptTemplateLoader;
 import ai.sagesource.opensagent.infrastructure.llm.openai.OpenAILLMClient;
 import ai.sagesource.opensagent.infrastructure.llm.openai.OpenAICompletionFactory;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -95,7 +95,7 @@ public class AgentBeanConfig {
     @Value("${sagent.agent.title.max-tokens:100}")
     private Integer titleMaxTokens;
 
-    @Autowired
+    @Resource
     private PromptProperties promptProperties;
 
     private LLMClient createLLMClient(String apiKey, String baseUrl, String model) {

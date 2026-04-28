@@ -12,7 +12,7 @@ import ai.sagesource.opensagent.infrastructure.agent.ReActAgent;
 import ai.sagesource.opensagent.infrastructure.agent.SimpleAgent;
 import ai.sagesource.opensagent.infrastructure.agent.memory.MultipleSQLLiteMemory;
 import ai.sagesource.opensagent.web.entity.Conversation;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -31,29 +31,37 @@ import java.util.function.Consumer;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ChatService {
 
+    @Resource
     @Qualifier("simpleCompletion")
-    private final LLMCompletion simpleCompletion;
+    private LLMCompletion simpleCompletion;
 
+    @Resource
     @Qualifier("smartCompletion")
-    private final LLMCompletion smartCompletion;
+    private LLMCompletion smartCompletion;
 
+    @Resource
     @Qualifier("simplePromptTemplate")
-    private final PromptTemplate simplePromptTemplate;
+    private PromptTemplate simplePromptTemplate;
 
+    @Resource
     @Qualifier("smartPromptTemplate")
-    private final PromptTemplate smartPromptTemplate;
+    private PromptTemplate smartPromptTemplate;
 
-    private final ConversationService conversationService;
-    private final TitleAgentService titleAgentService;
+    @Resource
+    private ConversationService conversationService;
 
+    @Resource
+    private TitleAgentService titleAgentService;
+
+    @Resource
     @Qualifier("simpleAgentConfig")
-    private final AgentConfig simpleAgentConfig;
+    private AgentConfig simpleAgentConfig;
 
+    @Resource
     @Qualifier("smartAgentConfig")
-    private final AgentConfig smartAgentConfig;
+    private AgentConfig smartAgentConfig;
 
     private static final String ACTION_PREFIX = "AGENT_ACTION[";
 

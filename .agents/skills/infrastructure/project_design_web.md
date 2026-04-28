@@ -15,7 +15,7 @@ description: Agent Web模块实现
    - 如果是第一条对话 OR 对话历史 < 5 条，需要调用标题Agent生成标题&持久化
 5. 每一个Agent都要使用独立的LLM配置项
 6. 全部使用MultipleSQLLiteMemory作为Memory组件
-7. 后端使用Spring-Boot，初始化Agent所需的参数均支持从Spring配置文件中获取；配置文件的值，支持使用DotEnv获取.env的配置
+7. 后端使用Spring-Boot，初始化Agent所需的参数均支持从Spring配置文件中获取；Spring配置文件的值，支持使用DotEnv获取.env的配置替换占位符
 8. Agent需要使用Prompt组件从指定的路径加载提示词，提示词路径、占位符值替换，都支持在配置文件中设置
 
 ## Web页面设计说明
