@@ -17,8 +17,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   isStreaming,
   disabled,
 }) => {
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       if (!isStreaming) onSend();
     }
@@ -32,7 +34,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="输入消息..."
+        placeholder={isMac ? 'Command + Enter 发送消息' : 'Ctrl + Enter 发送消息'}
         disabled={disabled || isStreaming}
       />
       {isStreaming ? (

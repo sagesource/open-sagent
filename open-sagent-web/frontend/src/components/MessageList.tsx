@@ -18,7 +18,9 @@ export const MessageList: React.FC<MessageListProps> = ({
   return (
     <div className="message-list">
       {messages.map((msg) => (
-        <MessageItem key={msg.id} message={msg} theme={theme} />
+        msg.role === 'loading' && streamingContent ? null : (
+          <MessageItem key={msg.id} message={msg} theme={theme} />
+        )
       ))}
       {streamingContent && (
         <MessageItem

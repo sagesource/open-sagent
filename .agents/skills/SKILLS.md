@@ -42,6 +42,11 @@
 | 013-frontend | plan/013-Web模块-前端风格优化方案.md         | Web模块前端UI风格优化方案（科技感主题、动画特效、现代化设计） |
 | 014  | plan/014-数据库初始化SQL与SQLite数据库创建SKILL设计方案.md | 数据库初始化SQL与SQLite数据库创建SKILL设计方案 |
 | 015  | plan/015-SpringBean依赖注入规范重构方案.md         | SpringBean依赖注入规范重构方案（统一使用@Resource注解） |
+| 016  | plan/016-Error日志输出规范优化方案.md               | Error日志输出规范优化方案 |
+| 017  | plan/017-Web模块-Memory-dbPath支持配置文件读取.md   | Web模块-Memory-dbPath支持配置文件读取 |
+| 018  | plan/018-Web模块-修复chat_message表未记录assistant消息.md | Web模块-修复chat_message表未记录assistant消息 |
+| 019  | plan/019-Web模块-修复Markdown流式渲染异常.md | Web模块-修复对话页面Markdown流式渲染不一致问题 |
+| 020  | plan/020-Web模块-对话Loading动画与快捷键发送消息.md | Web模块-对话Loading动画与Command/Ctrl+Enter快捷键发送消息 |
 
 ## 引用类SKILLS
 

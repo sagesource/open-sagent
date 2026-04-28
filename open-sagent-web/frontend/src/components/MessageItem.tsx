@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock } from './CodeBlock';
 import { ActionChip } from './ActionChip';
+import { normalizeStreamingMarkdown } from '../utils/markdown';
 import type { ChatMessage } from '../types';
 
 interface MessageItemProps {
@@ -14,9 +15,15 @@ interface MessageItemProps {
 
 export const MessageItem: React.FC<MessageItemProps> = ({ message, theme, action, isStreaming }) => {
   const isUser = message.role === 'user';
+  const isLoading = message.role === 'loading';
+
+  // 流式状态下对 Markdown 内容进行预处理，补全未闭合的语法结构
+  const displayContent = isStreaming
+    ? normalizeStreamingMarkdown(message.content)
+    : message.content;
 
   return (
-    <div className={`message-item ${isUser ? 'user' : 'assistant'}`}>
+    <div className={`message-item ${isUser ? 'user' : isLoading ? 'loading' : 'assistant'}`}>
       {isUser ? (
         <div className="message-avatar-user">
           {message.content.charAt(0).toUpperCase()}
@@ -35,6 +42,11 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, theme, action
       <div className="message-content">
         {isUser ? (
           <div className="user-text">{message.content}</div>
+        ) : isLoading ? (
+          <div className="loading-indicator">
+            <span className="loading-spinner" />
+            <span className="loading-text">正在思考...</span>
+          </div>
         ) : (
           <>
             {action && (
@@ -57,7 +69,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, theme, action
                 },
               }}
             >
-              {message.content}
+              {displayContent}
             </ReactMarkdown>
             {isStreaming && <span className="typing-cursor" />}
           </>

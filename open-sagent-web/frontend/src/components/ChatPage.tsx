@@ -76,7 +76,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ theme, onToggleTheme, onLogo
   };
 
   const handleSend = async () => {
-    if (!inputText.trim() || !currentConv || streamState.isStreaming) return;
+    if (!inputText.trim() || !currentConv || streamState.isStreaming || streamState.isConnecting) return;
 
     const text = inputText.trim();
     setInputText('');
@@ -87,30 +87,38 @@ export const ChatPage: React.FC<ChatPageProps> = ({ theme, onToggleTheme, onLogo
       content: text,
       createdAt: new Date().toISOString(),
     };
-    setMessages(prev => [...prev, userMsg]);
+
+    const loadingMsg: ChatMessage = {
+      id: Date.now() + 1,
+      role: 'loading',
+      content: '',
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, userMsg, loadingMsg]);
 
     try {
       const result = await startStream(currentConv.sessionId, text, currentConv.agentVersion);
 
       const assistantMsg: ChatMessage = {
-        id: Date.now() + 1,
+        id: Date.now() + 2,
         role: 'assistant',
         content: result.content,
         createdAt: new Date().toISOString(),
       };
-      setMessages(prev => [...prev, assistantMsg]);
+      setMessages(prev => prev.map(m => m.role === 'loading' ? assistantMsg : m));
 
       if (result.title && result.title !== currentConv.title) {
         handleUpdateTitle(currentConv.id, result.title);
       }
     } catch (e) {
       const errorMsg: ChatMessage = {
-        id: Date.now() + 1,
+        id: Date.now() + 2,
         role: 'assistant',
         content: `错误：${streamState.error || '对话异常'}`,
         createdAt: new Date().toISOString(),
       };
-      setMessages(prev => [...prev, errorMsg]);
+      setMessages(prev => prev.map(m => m.role === 'loading' ? errorMsg : m));
     }
   };
 
@@ -154,7 +162,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ theme, onToggleTheme, onLogo
         <div className="message-list-container">
           <MessageList
             messages={messages}
-            streamingContent={streamState.isStreaming ? streamState.content : null}
+            streamingContent={streamState.isStreaming || streamState.isConnecting ? streamState.content : null}
             streamingAction={streamState.action}
             theme={theme}
           />
@@ -166,7 +174,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ theme, onToggleTheme, onLogo
           onSend={handleSend}
           onCancel={handleCancel}
           isStreaming={streamState.isStreaming}
-          disabled={!currentConv}
+          disabled={!currentConv || streamState.isConnecting}
         />
         <div className="chat-footer">Powered by Open Sagent</div>
       </div>

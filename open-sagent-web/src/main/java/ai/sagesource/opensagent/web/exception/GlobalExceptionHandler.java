@@ -23,6 +23,11 @@ public class GlobalExceptionHandler {
         return ApiResponse.error(400, e.getMessage());
     }
 
+    @ExceptionHandler(org.springframework.web.context.request.async.AsyncRequestNotUsableException.class)
+    public void handleAsyncRequestNotUsable(org.springframework.web.context.request.async.AsyncRequestNotUsableException e) {
+        log.debug("> GlobalExceptionHandler | 客户端SSE连接已断开 <");
+    }
+
     @ExceptionHandler(Exception.class)
     public ApiResponse<Void> handleException(Exception e) {
         log.error("> GlobalExceptionHandler | 系统异常 <", e);

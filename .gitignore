@@ -29,3 +29,4 @@ target
 .env
 node_modules
 .obsidian
+*.db

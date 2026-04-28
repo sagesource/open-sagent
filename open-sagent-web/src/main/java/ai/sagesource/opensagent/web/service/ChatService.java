@@ -19,9 +19,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
@@ -85,6 +85,7 @@ public class ChatService {
 
         SseEmitter emitter = new SseEmitter(0L);
         String emitterId = sessionId + "-" + System.currentTimeMillis();
+        AtomicBoolean emitterBroken = new AtomicBoolean(false);
 
         conversationService.saveMessage(conversation.getId(), "user", message);
 
@@ -106,8 +107,12 @@ public class ChatService {
         Agent agent = createAgent(agentVersion, memory);
 
         final boolean finalNeedTitle = needTitle;
+        final StringBuilder assistantResponse = new StringBuilder();
 
         Consumer<StreamChunk> chunkConsumer = chunk -> {
+            if (emitterBroken.get()) {
+                return;
+            }
             try {
                 if (chunk.getDeltaText() != null && !chunk.getDeltaText().isEmpty()) {
                     if (chunk.getDeltaText().contains(ACTION_PREFIX)) {
@@ -115,12 +120,20 @@ public class ChatService {
                                 .name("action")
                                 .data(chunk.getDeltaText()));
                     } else {
+                        assistantResponse.append(chunk.getDeltaText());
                         emitter.send(SseEmitter.event()
                                 .name("message")
                                 .data(chunk.getDeltaText()));
                     }
                 }
                 if (chunk.isFinished()) {
+                    if (assistantResponse.length() > 0) {
+                        conversationService.saveMessage(
+                                conversation.getId(),
+                                "assistant",
+                                assistantResponse.toString()
+                        );
+                    }
                     if (finalNeedTitle) {
                         String title = titleAgentService.generateTitle(message, messageCount <= 1);
                         if (!"新对话".equals(title)) {
@@ -135,9 +148,9 @@ public class ChatService {
                             .data(""));
                     emitter.complete();
                 }
-            } catch (IOException e) {
-                log.error("> ChatService | SSE发送失败 <", e);
-                emitter.completeWithError(e);
+            } catch (Exception e) {
+                emitterBroken.set(true);
+                log.warn("> ChatService | SSE连接已断开，停止发送，sessionId: {} <", sessionId);
             }
         };
 
@@ -149,14 +162,18 @@ public class ChatService {
                 );
                 activeTokens.put(emitterId, token);
             } catch (Exception e) {
+                if (emitterBroken.get()) {
+                    log.warn("> ChatService | 客户端已断开，忽略流式异常，sessionId: {} <", sessionId);
+                    return;
+                }
                 log.error("> ChatService | 流式对话异常 <", e);
                 try {
                     emitter.send(SseEmitter.event()
                             .name("error")
                             .data(e.getMessage()));
                     emitter.complete();
-                } catch (IOException ex) {
-                    emitter.completeWithError(ex);
+                } catch (Exception ex) {
+                    log.warn("> ChatService | SSE连接已断开，无法发送错误事件 <");
                 }
             } finally {
                 activeTokens.remove(emitterId);

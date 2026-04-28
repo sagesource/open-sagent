@@ -20,7 +20,7 @@ export interface Conversation {
 
 export interface ChatMessage {
   id: number;
-  role: 'user' | 'assistant' | 'tool';
+  role: 'user' | 'assistant' | 'tool' | 'loading';
   content: string;
   createdAt: string;
 }
