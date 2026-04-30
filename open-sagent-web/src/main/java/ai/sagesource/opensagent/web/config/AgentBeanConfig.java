@@ -168,14 +168,14 @@ public class AgentBeanConfig {
         String templateName;
 
         if (path.startsWith("classpath:")) {
-            loader = new ClasspathPromptTemplateLoader();
+            loader = new ClasspathPromptTemplateLoader("");
             templateName = path.substring("classpath:".length());
         } else if (path.startsWith("/") || path.contains(":/") || path.contains(":\\")) {
             Path dir = Paths.get(path).getParent();
             templateName = Paths.get(path).getFileName().toString();
             loader = new FileSystemPromptTemplateLoader(dir);
         } else {
-            loader = new ClasspathPromptTemplateLoader();
+            loader = new ClasspathPromptTemplateLoader("");
             templateName = path;
         }
 

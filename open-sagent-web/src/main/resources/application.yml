@@ -37,7 +37,8 @@ sagent:
       # Prompt配置
       prompt-path: ${SIMPLE_PROMPT_PATH:prompts/simple-agent.txt}
       prompt-vars:
-        role: ${SIMPLE_PROMPT_ROLE:AI助手}
+        AGENT_ROLE: 资深的编程助手
+        AGENT_NAME: SIMPLE-SAGENT
 
     smart:
       model: ${SMART_AGENT_MODEL:}
@@ -60,7 +61,7 @@ sagent:
       # Prompt配置
       prompt-path: ${TITLE_PROMPT_PATH:prompts/title-agent.txt}
       prompt-vars:
-        max-length: ${TITLE_PROMPT_MAX_LENGTH:10}
+        AGENT_ROLE: 对话标题总结助手
   # Memory配置
   memory:
     db-path: ${SAGENT_MEMORY_DB_PATH:./open-sagent-web.db}
