@@ -138,6 +138,58 @@ body {
   display: flex;
   flex-direction: column;
   z-index: 10;
+  transition: width var(--transition-normal);
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 60px;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+  margin: 0 auto 8px;
+}
+
+.sidebar.collapsed .sidebar-header {
+  padding: 12px 8px;
+}
+
+.sidebar.collapsed .new-chat-btn {
+  padding: 10px;
+  font-size: 0;
+}
+
+.sidebar.collapsed .new-chat-btn svg {
+  margin-right: 0 !important;
+}
+
+.sidebar.collapsed .agent-version-switch,
+.sidebar.collapsed .conversation-list,
+.sidebar.collapsed .logo-text {
+  display: none;
+}
+
+.sidebar.collapsed .logo-wrapper {
+  padding: 12px 16px;
+  justify-content: center;
+}
+
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  margin: 8px 16px 0;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--accent-primary);
 }
 
 .sidebar-header {
@@ -368,8 +420,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-width: 900px;
+  max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
 }
 
 /* ========== 消息项 ========== */
@@ -420,11 +473,25 @@ body {
 }
 
 .message-content {
-  max-width: 80%;
+  flex: 1;
+  max-width: calc(100% - 50px);
   padding: 14px 18px;
   border-radius: 16px;
   line-height: 1.7;
   font-size: 14.5px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 用户消息气泡自适应宽度 */
+.message-item.user {
+  justify-content: flex-start;
+}
+
+.message-content.user-content-wrapper {
+  flex: 0 1 auto;
+  max-width: calc(100% - 50px);
+  min-width: 60px;
 }
 
 /* AI 消息气泡 - 玻璃拟态 */
@@ -535,6 +602,32 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.code-block-wrapper.text-block {
+  display: inline;
+  width: auto;
+  min-width: unset;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.text-block-pre {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 14.5px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .code-block-header {
   display: flex;
   justify-content: space-between;
@@ -600,7 +693,7 @@ body {
   display: flex;
   gap: 10px;
   align-items: flex-end;
-  max-width: 900px;
+  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
 }

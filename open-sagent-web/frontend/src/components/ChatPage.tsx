@@ -19,6 +19,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ theme, onToggleTheme, onLogo
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [agentVersion, setAgentVersion] = useState<'simple' | 'smart'>('simple');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { state: streamState, startStream, cancelStream } = useChatStream();
 
@@ -105,6 +106,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ theme, onToggleTheme, onLogo
         role: 'assistant',
         content: result.content,
         createdAt: new Date().toISOString(),
+        renderKey: Date.now(),
       };
       setMessages(prev => prev.map(m => m.role === 'loading' ? assistantMsg : m));
 
@@ -139,6 +141,8 @@ export const ChatPage: React.FC<ChatPageProps> = ({ theme, onToggleTheme, onLogo
         onUpdateTitle={handleUpdateTitle}
         agentVersion={agentVersion}
         onChangeVersion={setAgentVersion}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(v => !v)}
       />
       <div className="chat-main">
         <div className="chat-header">

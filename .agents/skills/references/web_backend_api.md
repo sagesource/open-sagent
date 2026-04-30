@@ -277,32 +277,34 @@ GET /api/chat/stream?sessionId={sessionId}&message={message}&agentVersion={agent
 
 **响应格式：** SSE (text/event-stream)
 
+> **注意：** 为防止SSE协议规范移除`data:`后的前导空格，所有event的`data`字段均为**JSON字符串格式**，前端收到后需通过`JSON.parse()`还原原始内容。
+
 ```
 event: message
-data: 你好
+data: "你好"
 
 event: message
-data: ！
+data: "！"
 
 event: action
-data: AGENT_ACTION[EXECUTE_TOOL]:search
+data: "AGENT_ACTION[EXECUTE_TOOL]:search"
 
 event: title
-data: 问候对话
+data: "问候对话"
 
 event: done
-data: 
+data: ""
 ```
 
 ### SSE事件类型说明
 
 | 事件名 | 说明 |
 |--------|------|
-| `message` | 流式文本增量，逐字/逐句输出 |
-| `action` | Agent动作标记，如 `AGENT_ACTION[EXECUTE_TOOL]:工具名` |
-| `title` | 对话标题生成结果（前5条消息内触发） |
-| `done` | 流式输出结束标记 |
-| `error` | 异常信息 |
+| `message` | 流式文本增量，逐字/逐句输出，`data`为JSON字符串 |
+| `action` | Agent动作标记，如 `"AGENT_ACTION[EXECUTE_TOOL]:工具名"`，`data`为JSON字符串 |
+| `title` | 对话标题生成结果（前5条消息内触发），`data`为JSON字符串 |
+| `done` | 流式输出结束标记，`data`为JSON空字符串 `""` |
+| `error` | 异常信息，`data`为JSON字符串 |
 
 ### 11. 中断对话
 
@@ -349,12 +351,23 @@ const token = localStorage.getItem('token') || '';
 const params = new URLSearchParams({ sessionId, message, agentVersion, token });
 const es = new EventSource(`/api/chat/stream?${params.toString()}`);
 
+// data字段为JSON字符串，需parse还原
+function parseSseData(data: string): string {
+  try {
+    return JSON.parse(data);
+  } catch {
+    return data;
+  }
+}
+
 es.addEventListener('message', (e) => {
-  console.log('收到文本:', e.data);
+  const chunk = parseSseData(e.data);
+  console.log('收到文本:', chunk);
 });
 
 es.addEventListener('action', (e) => {
-  console.log('Agent动作:', e.data);
+  const action = parseSseData(e.data);
+  console.log('Agent动作:', action);
 });
 
 es.addEventListener('done', () => {

@@ -12,6 +12,7 @@ import ai.sagesource.opensagent.infrastructure.agent.ReActAgent;
 import ai.sagesource.opensagent.infrastructure.agent.SimpleAgent;
 import ai.sagesource.opensagent.infrastructure.agent.memory.MultipleSQLLiteMemory;
 import ai.sagesource.opensagent.web.entity.Conversation;
+import com.alibaba.fastjson2.JSON;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -118,12 +119,12 @@ public class ChatService {
                     if (chunk.getDeltaText().contains(ACTION_PREFIX)) {
                         emitter.send(SseEmitter.event()
                                 .name("action")
-                                .data(chunk.getDeltaText()));
+                                .data(JSON.toJSONString(chunk.getDeltaText())));
                     } else {
                         assistantResponse.append(chunk.getDeltaText());
                         emitter.send(SseEmitter.event()
                                 .name("message")
-                                .data(chunk.getDeltaText()));
+                                .data(JSON.toJSONString(chunk.getDeltaText())));
                     }
                 }
                 if (chunk.isFinished()) {
@@ -141,11 +142,11 @@ public class ChatService {
                         }
                         emitter.send(SseEmitter.event()
                                 .name("title")
-                                .data(title));
+                                .data(JSON.toJSONString(title)));
                     }
                     emitter.send(SseEmitter.event()
                             .name("done")
-                            .data(""));
+                            .data(JSON.toJSONString("")));
                     emitter.complete();
                 }
             } catch (Exception e) {
@@ -170,7 +171,7 @@ public class ChatService {
                 try {
                     emitter.send(SseEmitter.event()
                             .name("error")
-                            .data(e.getMessage()));
+                            .data(JSON.toJSONString(e.getMessage())));
                     emitter.complete();
                 } catch (Exception ex) {
                     log.warn("> ChatService | SSE连接已断开，无法发送错误事件 <");

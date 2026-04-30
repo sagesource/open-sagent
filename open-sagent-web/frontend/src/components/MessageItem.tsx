@@ -26,7 +26,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, theme, action
     <div className={`message-item ${isUser ? 'user' : isLoading ? 'loading' : 'assistant'}`}>
       {isUser ? (
         <div className="message-avatar-user">
-          {message.content.charAt(0).toUpperCase()}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="20" height="20">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+          </svg>
         </div>
       ) : (
         <div className="message-avatar-ai">
@@ -39,7 +42,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, theme, action
           </svg>
         </div>
       )}
-      <div className="message-content">
+      <div className={`message-content ${isUser ? 'user-content-wrapper' : ''}`}>
         {isUser ? (
           <div className="user-text">{message.content}</div>
         ) : isLoading ? (
@@ -53,13 +56,14 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, theme, action
               <ActionChip action={action} />
             )}
             <ReactMarkdown
+              key={isStreaming ? `streaming-${message.id}` : `final-${message.id}`}
               remarkPlugins={[remarkGfm]}
               components={{
                 code(props) {
-                  const { inline, className, children } = props;
+                  const { className, children } = props;
                   return (
                     <CodeBlock
-                      inline={inline}
+                      inline={!className}
                       className={className}
                       theme={theme}
                     >

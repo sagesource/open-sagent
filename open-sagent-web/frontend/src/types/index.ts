@@ -23,6 +23,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'tool' | 'loading';
   content: string;
   createdAt: string;
+  renderKey?: number;
 }
 
 export interface StreamEvent {

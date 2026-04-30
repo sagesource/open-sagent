@@ -30,3 +30,4 @@ target
 node_modules
 .obsidian
 *.db
+dist

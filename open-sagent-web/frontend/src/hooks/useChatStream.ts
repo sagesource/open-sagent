@@ -1,5 +1,13 @@
 import { useState, useRef, useCallback } from 'react';
 
+function parseSseData(data: string): string {
+  try {
+    return JSON.parse(data);
+  } catch {
+    return data;
+  }
+}
+
 interface ChatState {
   content: string;
   action: string | null;
@@ -42,16 +50,17 @@ export function useChatStream() {
       let title: string | undefined;
 
       es.addEventListener('message', (e) => {
-        fullContent += e.data;
+        const chunk = parseSseData(e.data);
+        fullContent += chunk;
         setState(prev => ({ ...prev, content: fullContent, isConnecting: false, isStreaming: true }));
       });
 
       es.addEventListener('action', (e) => {
-        setState(prev => ({ ...prev, action: e.data, isConnecting: false, isStreaming: true }));
+        setState(prev => ({ ...prev, action: parseSseData(e.data), isConnecting: false, isStreaming: true }));
       });
 
       es.addEventListener('title', (e) => {
-        title = e.data;
+        title = parseSseData(e.data);
       });
 
       es.addEventListener('done', () => {
@@ -62,7 +71,7 @@ export function useChatStream() {
       });
 
       es.addEventListener('error', (e) => {
-        const data = (e as MessageEvent).data || '连接异常';
+        const data = parseSseData((e as MessageEvent).data) || '连接异常';
         es.close();
         setState(prev => ({ ...prev, isStreaming: false, isConnecting: false, error: data }));
         rejectRef.current = null;

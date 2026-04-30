@@ -27,29 +27,37 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ inline, className, childre
     return <code className="inline-code">{children}</code>;
   }
 
+  const isTextBlock = language === 'text';
+
   return (
-    <div className="code-block-wrapper">
-      <div className="code-block-header">
-        <div className="code-block-window-controls">
-          <span className="code-block-dot red" />
-          <span className="code-block-dot yellow" />
-          <span className="code-block-dot green" />
+    <div className={`code-block-wrapper ${isTextBlock ? 'text-block' : ''}`}>
+      {!isTextBlock && (
+        <div className="code-block-header">
+          <div className="code-block-window-controls">
+            <span className="code-block-dot red" />
+            <span className="code-block-dot yellow" />
+            <span className="code-block-dot green" />
+          </div>
+          <span className="code-language">{language}</span>
+          <button className="copy-button" onClick={handleCopy}>
+            {copied ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                已复制
+              </span>
+            ) : '复制'}
+          </button>
         </div>
-        <span className="code-language">{language}</span>
-        <button className="copy-button" onClick={handleCopy}>
-          {copied ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              已复制
-            </span>
-          ) : '复制'}
-        </button>
-      </div>
-      <SyntaxHighlighter style={style} language={language} PreTag="div">
-        {code}
-      </SyntaxHighlighter>
+      )}
+      {isTextBlock ? (
+        <pre className="text-block-pre"><code>{code}</code></pre>
+      ) : (
+        <SyntaxHighlighter style={style} language={language} PreTag="div">
+          {code}
+        </SyntaxHighlighter>
+      )}
     </div>
   );
 };
